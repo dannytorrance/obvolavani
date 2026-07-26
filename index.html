@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obvolávání – prototyp</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#EDF0EA;
+  --surface:#FFFFFF;
+  --surface-2:#F4F5F7;
+  --ink:#1E2A22;
+  --ink-soft:#5A6459;
+  --ink-faint:#8B9389;
+  --line:#DCE0D6;
+
+  --brand:#2F5D50;
+  --brand-dark:#1E3E35;
+
+  --c-backlog:#46607A;
+  --c-backlog-bg:#EAEEF2;
+  --c-meetings:#2F6E52;
+  --c-meetings-bg:#E8F1EA;
+  --c-later:#B87A25;
+  --c-later-bg:#F5EDDF;
+  --c-acquired:#8C5A2B;
+  --c-acquired-bg:#F3E9DB;
+
+  --hot:#D10910;
+  --hot-lightest:#FAE6E7;
+  --warm:#C08A3E;
+  --cold:#4A7196;
+
+  /* Figma variables — "MM reality dashboard" file, Color collection (pulled via get_variable_defs) */
+  --mm-green:#53BD04;         /* Color/Primary Light */
+  --mm-green-dark:#387B22;    /* Color/Primary */
+  --mm-green-lightest:#E1F8D6;/* Color/Primary Lightest */
+  --mm-gray-dark:#333333;     /* Color/Gray/Dark — also "Icon Color" */
+  --mm-gray:#8A8A8A;          /* Color/Gray/D-Gray */
+  --mm-gray-light:#FFFFFF;    /* Color/Gray/Light */
+  --mm-gray-line:#D3D7DE;     /* Color/Gray/L-Gray — card borders */
+  --mm-gray-mid:#B0B5C1;      /* Color/Gray/M-Gray — panel/section borders */
+  --mm-ls-gray:#F4F5F7;       /* Color/Gray/LS-Gray — container background */
+
+  --radius:10px;
+  --shadow:0 1px 2px rgba(30,42,34,0.06), 0 4px 14px rgba(30,42,34,0.06);
+  --shadow-lift:0 8px 24px rgba(30,42,34,0.16);
+}
+
+html[data-theme="dark"]{
+  --bg:#141812;
+  --surface:#1D2319;
+  --surface-2:#252C20;
+  --ink:#ECF1E6;
+  --ink-soft:#AEB8A6;
+  --ink-faint:#77816F;
+  --line:#333B2C;
+
+  --brand-dark:#0F1912;
+
+  --c-backlog-bg:#1E2733;
+  --c-meetings-bg:#1C2A1F;
+  --c-later-bg:#2C2416;
+  --c-acquired-bg:#2A2016;
+
+  --mm-gray-dark:#ECF1E6;
+  --mm-gray:#9DA895;
+  --mm-gray-light:#1D2319;
+  --mm-gray-line:#333B2C;
+  --mm-gray-mid:#3A4432;
+  --mm-ls-gray:#1D2319;
+  --mm-green-lightest:#20301A;
+  --hot-lightest:#3A2420;
+
+  --shadow:0 1px 2px rgba(0,0,0,0.35), 0 4px 14px rgba(0,0,0,0.3);
+  --shadow-lift:0 8px 28px rgba(0,0,0,0.55);
+}
+html[data-theme="dark"] .search-wrap.on-light input,
+html[data-theme="dark"] select.filter.on-light{
+  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+}
+html[data-theme="dark"] .cards::-webkit-scrollbar-thumb{background:#3A4432;}
+html[data-theme="dark"] .queue-btn:hover{background:var(--mm-green-lightest);}
+html, body{transition:background-color .2s ease, color .2s ease;}
+.page-header, .toolbar-row, .column, .card, .modal, .drawer-panel, .cards, .btn, select.filter, input{
+  transition:background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- Page Header (Figma "Page Header - Panel", node 251:6450) ---------- */
+.page-header{
+  background:var(--surface);
+  padding:16px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:16px;
+  border-bottom:1px solid var(--line);
+}
+.page-header-left{
+  display:flex;
+  align-items:center;
+  gap:32px;
+  flex:1 1 320px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.h1-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+  flex-shrink:0;
+}
+.drawer-title-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  position:relative;
+}
+.h1-wrap h1{
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:32px;
+  color:var(--mm-gray-dark);
+  margin:0;
+  white-space:nowrap;
+  line-height:1.1;
+}
+.info-icon-btn{
+  border:none;
+  background:none;
+  padding:0;
+  width:24px; height:24px;
+  color:var(--mm-gray-dark);
+  cursor:pointer;
+  flex-shrink:0;
+  display:flex;
+}
+.info-icon-btn:hover{color:var(--mm-green-dark);}
+.info-icon-btn[aria-expanded="true"]{color:var(--mm-green);}
+
+.backlog-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--mm-green-dark);
+  border:none;
+  color:#fff;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  flex-shrink:0;
+  font-family:'Inter',sans-serif;
+}
+.backlog-btn:hover{filter:brightness(0.92);}
+.backlog-btn span{
+  font-size:16px;
+  font-weight:600;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.page-header-right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-shrink:0;
+}
+.darkmode-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#333333;
+  border:none;
+  color:#fff;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+}
+.darkmode-btn:hover{filter:brightness(1.2);}
+.darkmode-btn span:first-child{font-size:14px; font-weight:400; white-space:nowrap;}
+.darkmode-btn svg{display:block;}
+html[data-theme="dark"] .darkmode-btn{background:#F4F5F7; color:#1A1A1A;}
+html[data-theme="dark"] .darkmode-btn:hover{filter:brightness(0.95);}
+
+.header-avatar{
+  width:40px; height:40px;
+  border-radius:32px;
+  border:1px solid var(--surface);
+  box-shadow:0 0 4px 0 rgba(0,0,0,0.3);
+  background:linear-gradient(135deg, var(--mm-green) 0%, var(--mm-green-dark) 100%);
+  overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.header-avatar img{
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.help-icon,
+.brand-title-row{ /* legacy aliases kept harmless if referenced anywhere */ }
+.help-tooltip{
+  position:absolute;
+  top:50%;
+  left:calc(100% + 10px);
+  transform:translateY(-50%);
+  z-index:50;
+  background:#333333;
+  color:#FFFFFF;
+  opacity:0.9;
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  font-weight:400;
+  line-height:1.35;
+  padding:8px 12px;
+  border-radius:4px;
+  width:max-content;
+  max-width:280px;
+  box-shadow:var(--shadow-lift);
+  display:none;
+}
+.help-tooltip.open{display:block;}
+.help-tooltip::before{
+  content:"";
+  position:absolute;
+  top:50%; left:-6px;
+  transform:translateY(-50%);
+  width:0; height:0;
+  border-top:6px solid transparent;
+  border-bottom:6px solid transparent;
+  border-right:6px solid #333333;
+}
+@media (max-width:700px){
+  .help-tooltip{left:0; top:calc(100% + 10px); transform:none;}
+  .help-tooltip::before{left:8px; top:-6px; transform:none; border-right:6px solid transparent; border-left:6px solid transparent; border-bottom:6px solid #333333; border-top:none;}
+}
+
+/* ---------- Toolbar row (search + filters) ---------- */
+.toolbar-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  padding:12px 16px;
+  background:var(--surface-2);
+  border-bottom:1px solid var(--line);
+}
+.search-wrap{
+  position:relative;
+}
+.toolbar-row .search-wrap{
+  flex:1 1 240px;
+  min-width:160px;
+}
+.search-wrap input{
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--ink);
+  border-radius:8px;
+  padding:9px 12px 9px 32px;
+  font-size:13.5px;
+  width:100%;
+  font-family:'Inter',sans-serif;
+}
+.search-wrap input::placeholder{color:var(--ink-faint);}
+.search-wrap input:focus{outline:2px solid var(--mm-green); outline-offset:1px;}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:0.75;}
+
+select.filter{
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--ink);
+  border-radius:8px;
+  padding:9px 10px;
+  font-size:13.5px;
+  font-family:'Inter',sans-serif;
+}
+
+.search-wrap.on-light input{
+  background:var(--surface); color:var(--ink);
+  border:1px solid var(--line);
+}
+.search-wrap.on-light input::placeholder{color:var(--ink-faint);}
+.search-wrap.on-light svg{opacity:0.6;}
+select.filter.on-light{
+  background:var(--surface); color:var(--ink);
+  border:1px solid var(--line);
+}
+
+
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ---------- Board ---------- */
+.board{
+  display:flex;
+  gap:20px;
+  padding:24px 24px 40px;
+  overflow-x:auto;
+  align-items:flex-start;
+}
+.column{
+  background:var(--surface-2);
+  border-radius:18px;
+  min-width:310px;
+  max-width:340px;
+  flex:1 0 310px;
+  display:flex;
+  flex-direction:column;
+  max-height:calc(100vh - 100px);
+  border:1px solid var(--line);
+  box-shadow:none;
+  overflow:hidden;
+  position:relative;
+}
+.column::before{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:4px;
+  z-index:1;
+}
+.col-backlog::before{background:var(--c-backlog);}
+.col-meetings::before{background:var(--c-meetings);}
+.col-later::before{background:var(--c-later);}
+.col-acquired::before{background:var(--c-acquired);}
+.column-head{
+  padding:20px 18px 14px;
+  border:none;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.column-head svg{
+  order:1;
+  flex-shrink:0;
+  background:var(--surface-2);
+  border-radius:10px;
+  padding:6px;
+  box-sizing:content-box;
+}
+.column-head h2{
+  order:2;
+  flex:1;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  margin:0;
+  color:var(--ink-soft);
+  line-height:1.3;
+  text-align:left;
+}
+.column-count{
+  order:3;
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  color:#fff;
+  min-width:22px;
+  height:22px;
+  padding:0 7px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+.col-backlog .column-count,
+.col-meetings .column-count,
+.col-later .column-count,
+.col-acquired .column-count{background:#8A8A8A; color:#fff;}
+.col-backlog .column-head svg,
+.col-meetings .column-head svg,
+.col-later .column-head svg,
+.col-acquired .column-head svg{color:#8A8A8A;}
+html[data-theme="dark"] .col-backlog .column-count,
+html[data-theme="dark"] .col-meetings .column-count,
+html[data-theme="dark"] .col-later .column-count,
+html[data-theme="dark"] .col-acquired .column-count{background:#E6E6E6; color:#1A1A1A;}
+html[data-theme="dark"] .col-backlog .column-head svg,
+html[data-theme="dark"] .col-meetings .column-head svg,
+html[data-theme="dark"] .col-later .column-head svg,
+html[data-theme="dark"] .col-acquired .column-head svg{color:#E6E6E6;}
+
+.cards{
+  padding:6px 14px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow-y:auto;
+  flex:1;
+}
+.cards.drag-over{background:rgba(83,189,4,0.07); outline:2px dashed var(--mm-green); outline-offset:-6px; border-radius:8px;}
+.cards::-webkit-scrollbar{width:7px;}
+.cards::-webkit-scrollbar-thumb{background:#CCD3C6; border-radius:6px;}
+
+.empty-hint{
+  font-size:12.5px;
+  color:var(--ink-faint);
+  text-align:center;
+  padding:22px 10px;
+  border:1.5px dashed var(--line);
+  border-radius:8px;
+}
+
+/* ---------- Card ---------- */
+.card{
+  background:var(--surface);
+  border-radius:9px;
+  padding:11px 12px 10px;
+  box-shadow:var(--shadow);
+  cursor:grab;
+  border-left:4px solid var(--ink-faint);
+  transition:box-shadow .15s ease, transform .15s ease;
+}
+.card:hover{box-shadow:var(--shadow-lift); transform:translateY(-1px);}
+.card:focus-visible{outline:2px solid var(--mm-green); outline-offset:2px;}
+.card.dragging{opacity:0.4;}
+.col-backlog .card{border-left-color:var(--c-backlog);}
+.col-meetings .card{border-left-color:var(--c-meetings);}
+.col-later .card{border-left-color:var(--c-later);}
+.col-acquired .card{border-left-color:var(--c-acquired);}
+
+.card-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:6px;
+  gap:6px;
+}
+.chip{
+  font-size:10.5px;
+  font-weight:600;
+  padding:2px 7px;
+  border-radius:20px;
+  background:var(--surface-2);
+  color:var(--ink-soft);
+  border:1px solid var(--line);
+  white-space:nowrap;
+}
+.temp{
+  display:flex;align-items:center;gap:4px;
+  font-size:10.5px;font-weight:600;
+}
+.temp .dot{width:7px;height:7px;}
+.temp.hot .dot{background:var(--hot);} .temp.hot{color:var(--hot);}
+.temp.warm .dot{background:var(--warm);} .temp.warm{color:var(--warm);}
+.temp.cold .dot{background:var(--cold);} .temp.cold{color:var(--cold);}
+
+.card-name{
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  margin:0 0 2px;
+  color:var(--ink);
+}
+.card-locality{font-size:12.5px; color:var(--ink-soft); margin-bottom:5px;}
+.card-price{
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:500;
+  color:var(--brand-dark);
+  margin-bottom:7px;
+}
+.card-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding-top:7px;
+  border-top:1px solid var(--line);
+}
+.phone-link{
+  font-family:'Inter',sans-serif;
+  font-size:12px;
+  color:var(--ink-soft);
+  text-decoration:none;
+}
+.phone-link:hover{color:var(--mm-green-dark);}
+.call-btn{
+  border:none;
+  background:var(--mm-green);
+  color:#fff;
+  width:26px;height:26px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.call-btn:hover{background:var(--mm-green-dark);}
+.card-meta-line{
+  font-size:11.5px;
+  color:var(--ink-faint);
+  margin-top:6px;
+}
+
+/* ---------- Backlog Card — Figma "Card Backlog / Molecule" (node 9:58) ---------- */
+.card.card-backlog-molecule, .card.kanban-molecule{
+  background:var(--mm-gray-light);
+  border:1px solid var(--mm-gray-line);
+  border-left:1px solid var(--mm-gray-line);
+  border-radius:8px;
+  box-shadow:0 0 16px 0 rgba(0,0,0,0.1);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  height:auto;
+  flex-shrink:0;
+}
+.card.card-backlog-molecule:hover, .card.kanban-molecule:hover{box-shadow:0 0 20px 0 rgba(0,0,0,0.16); transform:translateY(-1px);}
+.card.kanban-molecule{cursor:grab;}
+.card.kanban-molecule.dragging{opacity:0.4;}
+
+.molecule-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  width:100%;
+}
+.molecule-header-left{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  min-width:0;
+}
+.molecule-phone-icon{flex-shrink:0; margin-top:1px; color:var(--mm-gray-dark);}
+.molecule-texts{display:flex; flex-direction:column; gap:4px; min-width:0;}
+.molecule-name{
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:15px;
+  letter-spacing:0.01em;
+  text-transform:uppercase;
+  color:var(--mm-green);
+  line-height:1.2;
+}
+.molecule-phone{
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:19px;
+  color:var(--mm-gray-dark);
+  line-height:1.2;
+  text-decoration:none;
+  display:block;
+}
+.molecule-phone:hover{color:var(--mm-green-dark);}
+.molecule-email{
+  font-family:'Inter',sans-serif;
+  font-weight:400;
+  font-size:13px;
+  color:var(--mm-gray);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;
+}
+.molecule-time{
+  font-family:'Inter',sans-serif;
+  font-size:12.5px;
+  color:var(--mm-gray-dark);
+  white-space:nowrap;
+  flex-shrink:0;
+  padding-top:2px;
+}
+
+.molecule-body{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  width:100%;
+  padding-left:29px;
+}
+.molecule-row{
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:400;
+  color:var(--mm-gray);
+  line-height:1.4;
+}
+.molecule-row-strong{
+  color:var(--mm-gray-dark);
+  font-weight:600;
+  text-transform:uppercase;
+  font-size:13px;
+  letter-spacing:0.01em;
+}
+.molecule-note{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.molecule-location{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  color:var(--mm-gray);
+}
+.molecule-location span:last-child{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.molecule-pin-icon{display:inline-flex; color:var(--mm-gray); flex-shrink:0;}
+
+.molecule-footer{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  padding-top:12px;
+  border-top:1px solid var(--surface-2);
+  width:100%;
+}
+
+/* Right-side "atom" in the Kanban Molecule header — Figma's Lock atom, repurposed per column status */
+.kanban-status{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  flex-shrink:0;
+  color:var(--mm-gray-dark);
+  text-align:center;
+}
+.kanban-status-icon{display:flex; color:var(--mm-gray-dark);}
+.kanban-status-text{
+  font-family:'Inter',sans-serif;
+  font-size:11.5px;
+  font-weight:500;
+  color:var(--mm-gray-dark);
+  line-height:1.25;
+  white-space:nowrap;
+}
+.kanban-footer-hint{
+  font-family:'Inter',sans-serif;
+  font-size:11.5px;
+  color:var(--mm-gray);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed; inset:0;
+  background:rgba(20,26,20,0.45);
+  display:none;
+  align-items:flex-start;
+  justify-content:center;
+  padding:40px 16px;
+  overflow-y:auto;
+  z-index:100;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);
+  border-radius:14px;
+  max-width:520px;
+  width:100%;
+  box-shadow:var(--shadow-lift);
+  overflow:hidden;
+}
+.modal-head{
+  padding:20px 22px 16px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+}
+.modal-head h2{
+  font-family:'Inter',sans-serif;
+  font-size:20px;
+  margin:0 0 4px;
+}
+.modal-head a{
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  color:var(--mm-green-dark);
+  text-decoration:none;
+}
+.modal-close{
+  border:none;background:var(--surface-2);
+  width:30px;height:30px;border-radius:50%;
+  cursor:pointer; font-size:16px; color:var(--ink-soft);
+  flex-shrink:0;
+}
+.modal-close:hover{background:var(--line);}
+.modal-body{padding:18px 22px 22px;}
+.meta-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px 16px;
+  margin-bottom:16px;
+}
+.meta-item .label{font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-faint); margin-bottom:2px;}
+.meta-item .value{font-size:13.5px; color:var(--ink);}
+.status-banner{
+  font-size:12.5px;
+  padding:8px 12px;
+  border-radius:8px;
+  margin-bottom:16px;
+  font-weight:500;
+}
+.note-label{font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; display:block;}
+textarea.note-field{
+  width:100%;
+  min-height:70px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:9px 10px;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  resize:vertical;
+  color:var(--ink);
+  margin-bottom:14px;
+}
+textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;}
+
+.action-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:6px;
+}
+.btn{
+  border:1px solid var(--line);
+  background:var(--surface);
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  color:var(--ink);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.btn:hover{background:var(--surface-2);}
+.btn:focus-visible{outline:2px solid var(--mm-green); outline-offset:1px;}
+.btn.primary{background:var(--mm-green); border-color:var(--mm-green); color:#fff;}
+.btn.primary:hover{background:var(--mm-green-dark); border-color:var(--mm-green-dark);}
+.btn.ghost-danger{color:var(--hot); border-color:var(--hot-lightest);}
+.btn.ghost-danger:hover{background:var(--hot-lightest);}
+.btn.small{padding:6px 10px; font-size:12px;}
+
+.action-form{
+  margin-top:12px;
+  padding:14px;
+  background:var(--surface-2);
+  border-radius:10px;
+  border:1px solid var(--line);
+}
+.action-form h4{margin:0 0 10px; font-size:13px; font-family:'Inter',sans-serif;}
+.form-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+.form-field{display:flex; flex-direction:column; gap:4px; flex:1; min-width:130px;}
+.form-field label{font-size:11px; color:var(--ink-soft); font-weight:600;}
+.form-field input, .form-field select{
+  border:1px solid var(--line);
+  border-radius:7px;
+  padding:7px 9px;
+  font-size:13px;
+  font-family:'Inter',sans-serif;
+}
+
+/* ---------- Backlog drawer (slide-out panel) ---------- */
+.drawer-overlay{
+  position:fixed; inset:0;
+  background:rgba(20,26,20,0.45);
+  display:flex;
+  justify-content:flex-end;
+  z-index:150;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+.drawer-overlay.open{opacity:1; pointer-events:auto;}
+.drawer-dropzone-highlight{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  text-align:center;
+  border:3px dashed transparent;
+  margin:10px;
+  border-radius:16px;
+  transition:background-color .15s ease, border-color .15s ease;
+}
+.drawer-dropzone-highlight.active{
+  background:rgba(83,189,4,0.18);
+  border-color:var(--mm-green);
+}
+.drawer-dropzone-label{
+  display:none;
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+  background:var(--mm-green-dark);
+  padding:12px 20px;
+  border-radius:10px;
+  box-shadow:var(--shadow-lift);
+}
+.drawer-dropzone-highlight.active .drawer-dropzone-label{display:block;}
+.drawer-panel{
+  background:var(--surface);
+  width:75vw;
+  max-width:1400px;
+  height:100vh;
+  box-shadow:-10px 0 32px rgba(0,0,0,0.18);
+  display:flex;
+  flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.2,.8,.2,1);
+}
+.drawer-overlay.open .drawer-panel{transform:translateX(0);}
+@media (max-width:900px){ .drawer-panel{width:100vw;} }
+
+.drawer-header{
+  padding:20px 26px 16px;
+  border-bottom:1px solid var(--line);
+  display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+  flex-shrink:0;
+}
+.drawer-header h2{font-family:'Inter',sans-serif; font-size:22px; margin:0 0 5px; color:var(--ink);}
+.drawer-toolbar{
+  padding:14px 26px;
+  display:flex; flex-direction:column; gap:10px;
+  border-bottom:1px solid var(--line);
+  background:var(--surface-2);
+  flex-shrink:0;
+}
+.search-wrap-full{width:100%;}
+.search-wrap-full input{width:100%;}
+
+.filter-group{
+  display:flex;
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--surface);
+}
+.filter-group select.filter{
+  flex:1;
+  min-width:0;
+  border:none;
+  border-radius:0;
+  border-right:1px solid var(--line);
+  background:var(--surface);
+}
+.filter-group select.filter:last-child{border-right:none;}
+.filter-group select.filter:focus-visible{outline:2px solid var(--mm-green); outline-offset:-2px; position:relative; z-index:1;}
+@media (max-width:760px){
+  .filter-group{flex-wrap:wrap;}
+  .filter-group select.filter{flex:1 1 50%; border-bottom:1px solid var(--line);}
+}
+.drawer-meta{
+  padding:14px 26px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.drawer-grid{
+  flex:1;
+  overflow-y:auto;
+  padding:14px 26px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+  gap:14px;
+  align-content:start;
+}
+.drawer-loadmore{padding:6px 26px 22px; text-align:center; flex-shrink:0;}
+
+.queue-btn{
+  border:1px solid var(--mm-green);
+  background:#fff;
+  color:var(--mm-green-dark);
+  font-size:11.5px;
+  font-weight:600;
+  padding:6px 11px;
+  border-radius:20px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.queue-btn:hover{background:var(--mm-green-lightest);}
+.queue-btn.queued{background:var(--mm-green); color:#fff;}
+.queue-btn.queued:hover{background:var(--mm-green-dark); border-color:var(--mm-green-dark);}
+.molecule-footer-right{display:flex; gap:8px; align-items:center; flex:1; justify-content:flex-end;}
+
+/* ---------- Backlog selection ---------- */
+.card.card-backlog-molecule{position:relative;}
+.select-check{
+  position:absolute;
+  top:12px; right:12px;
+  width:22px; height:22px;
+  border-radius:50%;
+  border:2px solid var(--mm-gray-line);
+  background:var(--mm-gray-light);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; color:#fff;
+  transition:background .15s ease, border-color .15s ease;
+}
+.card.card-backlog-molecule.selected{
+  border-color:var(--mm-green);
+  box-shadow:0 0 0 2px var(--mm-green), 0 0 16px 0 rgba(0,0,0,0.1);
+}
+.card.card-backlog-molecule.selected .select-check{
+  background:var(--mm-green);
+  border-color:var(--mm-green);
+}
+
+.drawer-selection-bar{
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:0 26px;
+  max-height:0;
+  overflow:hidden;
+  background:var(--mm-green-lightest);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+  transition:max-height .2s ease, padding .2s ease;
+}
+.drawer-selection-bar.visible{display:flex; max-height:120px; padding:12px 26px;}
+.selection-bar-text{font-size:13px; color:var(--ink); display:flex; flex-direction:column; gap:2px;}
+.selection-bar-text strong{color:var(--mm-green-dark); font-size:14px;}
+.selection-bar-hint{font-size:11.5px; color:var(--ink-soft); font-weight:400;}
+.selection-bar-actions{display:flex; gap:8px; flex-shrink:0;}
+
+/* ---------- Countdown expiry states (board card) ---------- */
+.card.kanban-molecule.near-expiry{
+  border-left:1px solid var(--hot);
+  box-shadow:0 0 0 1px var(--hot), 0 0 16px 0 rgba(209,9,16,0.15);
+  animation:expiryPulse 2.2s ease-in-out infinite;
+}
+.card.kanban-molecule.near-expiry .kanban-status-icon,
+.card.kanban-molecule.near-expiry .kanban-status-text{color:var(--hot);}
+@keyframes expiryPulse{
+  0%, 100%{box-shadow:0 0 0 1px var(--hot), 0 0 16px 0 rgba(209,9,16,0.15);}
+  50%{box-shadow:0 0 0 1px var(--hot), 0 0 22px 4px rgba(209,9,16,0.28);}
+}
+
+/* Toast */
+.toast{
+  position:fixed;
+  bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--brand-dark);
+  color:#F4F6F2;
+  padding:11px 20px;
+  border-radius:30px;
+  font-size:13.5px;
+  box-shadow:var(--shadow-lift);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+  z-index:200;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+@media (max-width:700px){
+  .page-header{padding:14px;}
+  .toolbar-row{padding:10px 14px;}
+  .board{padding-left:14px; padding-right:14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="h1-wrap">
+      <h1>M&amp;M Kanban Tabule</h1>
+      <button class="info-icon-btn" id="helpIconBtn" onclick="toggleTooltip(event, 'helpTooltip')" aria-label="Nápověda" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
+      <div class="help-tooltip" id="helpTooltip">Přetáhněte položky mezi sloupci <br>pro správu pracovního postupu.</div>
+    </div>
+    <button class="backlog-btn" id="backlogToggleBtn" onclick="toggleBacklogPanel()" aria-pressed="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+      <span>Zobrazit Backlog</span>
+    </button>
+  </div>
+  <div class="page-header-right">
+    <button class="darkmode-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-pressed="false" title="Přepnout světlý/tmavý režim">
+      <span id="themeLabel">dark mode</span>
+      <span id="themeIcon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </span>
+    </button>
+    <div class="header-avatar" title="Radek Jánský">
+      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Radek Jánský">
+    </div>
+  </div>
+</div>
+
+<div class="toolbar-row">
+  <div class="search-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6459" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="searchInput" type="text" placeholder="Hledat jméno, lokalitu, telefon…">
+  </div>
+  <select id="typeFilter" class="filter"></select>
+</div>
+
+
+
+<div class="board" id="board">
+  <div class="column col-backlog" data-status="backlog">
+    <div class="column-head">
+      <span class="column-count" id="count-backlog">0</span>
+      <h2>Kontakty</h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+    <div class="cards" id="cards-backlog"></div>
+  </div>
+
+  <div class="column col-meetings" data-status="meetings">
+    <div class="column-head">
+      <span class="column-count" id="count-meetings">0</span>
+      <h2>Schůzky</h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>
+    </div>
+    <div class="cards" id="cards-meetings"></div>
+  </div>
+
+  <div class="column col-later" data-status="later">
+    <div class="column-head">
+      <span class="column-count" id="count-later">0</span>
+      <h2>Zavolat</h2>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.81.35 1.6.67 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.74-1.24a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.67A2 2 0 0 1 22 16.92z"/></svg>
+    </div>
+    <div class="cards" id="cards-later"></div>
+  </div>
+
+  <div class="column col-acquired" data-status="acquired">
+    <div class="column-head">
+      <span class="column-count" id="count-acquired">0</span>
+      <h2>Získané</h2>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 8.5V21h14V8.5"/><path d="M9 21v-6h6v6"/></svg>
+    </div>
+    <div class="cards" id="cards-acquired"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer-dropzone-highlight" id="drawerDropzoneHighlight" aria-hidden="true">
+    <span class="drawer-dropzone-label">⬇ Pusťte zde pro přesun do dnešní fronty</span>
+  </div>
+  <div class="drawer-panel" id="drawerPanel" role="dialog" aria-label="Backlog kontaktů">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-title-wrap">
+          <h2>Backlog kontaktů</h2>
+          <button class="info-icon-btn" id="drawerHelpIconBtn" onclick="toggleTooltip(event, 'drawerHelpTooltip')" aria-label="Nápověda" aria-expanded="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </button>
+          <div class="help-tooltip" id="drawerHelpTooltip">Zdrojový zásobník kontaktů k provolání — připraveno na filtrování, řazení a stránkování záznamů.</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeBacklogPanel()" aria-label="Zavřít backlog">✕</button>
+    </div>
+    <div class="drawer-toolbar">
+      <div class="search-wrap on-light search-wrap-full">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6459" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="backlogSearchInput" type="text" placeholder="Hledat jméno, lokalitu, telefon…">
+      </div>
+      <div class="filter-group">
+        <select id="backlogTypeFilter" class="filter on-light"></select>
+        <select id="backlogSourceFilter" class="filter on-light"></select>
+        <select id="backlogSortSelect" class="filter on-light">
+          <option value="az">Řadit: abecedně A–Z</option>
+          <option value="priceDesc">Řadit: cena – nejvyšší</option>
+          <option value="priceAsc">Řadit: cena – nejnižší</option>
+          <option value="lastCall">Řadit: naposledy kontaktováno</option>
+        </select>
+      </div>
+    </div>
+    <div class="drawer-selection-bar" id="drawerSelectionBar"></div>
+    <div class="drawer-meta" id="drawerMeta"></div>
+    <div class="drawer-grid" id="drawerGrid"></div>
+    <div class="drawer-loadmore" id="drawerLoadMoreWrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= DATA ================= */
+let contacts = [
+  // ---- BACKLOG (28) ----
+  {id:1, name:"Petr Novák", phone:"+420 601 234 567", locality:"Praha 4 – Braník", type:"Byt 3+kk", area:78, price:6900000, source:"Sreality", note:"Dědictví po rodičích, zvažuje rychlý prodej.", status:"backlog", temp:"hot", lastCall:"14.7.2026"},
+  {id:2, name:"Jana Svobodová", phone:"+420 602 345 678", locality:"Brno-Žabovřesky", type:"Byt 2+kk", area:54, price:4950000, source:"Doporučení", note:"Stěhuje se za prací do Prahy.", status:"backlog", temp:"warm", lastCall:null},
+  {id:3, name:"Tomáš Dvořák", phone:"+420 603 456 789", locality:"Ostrava-Poruba", type:"Rodinný dům", area:145, price:5200000, source:"Vlastní databáze", note:"Dům po rodičích, nikdo z rodiny nechce bydlet.", status:"backlog", temp:"hot", lastCall:"10.7.2026"},
+  {id:4, name:"Eva Černá", phone:"+420 604 567 890", locality:"Plzeň-Doubravka", type:"Byt 1+kk", area:32, price:2950000, source:"Poptávka z webu", note:"Investiční byt, hledá výhodnější nájemníky nebo prodej.", status:"backlog", temp:"cold", lastCall:null},
+  {id:5, name:"Martin Procházka", phone:"+420 605 678 901", locality:"Liberec", type:"Rodinný dům", area:180, price:8400000, source:"Facebook inzerát", note:"Rozvod, řeší vypořádání společného majetku.", status:"backlog", temp:"warm", lastCall:"9.7.2026"},
+  {id:6, name:"Lucie Kučerová", phone:"+420 606 789 012", locality:"Olomouc", type:"Byt 2+kk", area:61, price:4300000, source:"Sreality", note:"Chce nejdřív najít nové bydlení, pak prodávat.", status:"backlog", temp:"cold", lastCall:null},
+  {id:7, name:"Jakub Veselý", phone:"+420 607 890 123", locality:"Hradec Králové", type:"Byt 4+1", area:95, price:7100000, source:"Doporučení", note:"Rodina se rozrůstá, potřebují menší splátky.", status:"backlog", temp:"warm", lastCall:"12.7.2026"},
+  {id:8, name:"Petra Horáková", phone:"+420 608 901 234", locality:"Pardubice", type:"Chata", area:40, price:1850000, source:"Bazoš", note:"Chata už nevyužívaná, zdědila po tetě.", status:"backlog", temp:"cold", lastCall:null},
+  {id:9, name:"Michal Němec", phone:"+420 609 012 345", locality:"Zlín", type:"Pozemek stavební", area:850, price:2100000, source:"Vlastní databáze", note:"Stavební pozemek, plánovaná výstavba se odkládá.", status:"backlog", temp:"warm", lastCall:null},
+  {id:10, name:"Kateřina Marková", phone:"+420 700 123 456", locality:"České Budějovice", type:"Byt 3+kk", area:72, price:5600000, source:"Poptávka z webu", note:"Prodej kvůli stěhování do zahraničí.", status:"backlog", temp:"hot", lastCall:"15.7.2026"},
+  {id:11, name:"Jan Pokorný", phone:"+420 701 234 567", locality:"Ústí nad Labem", type:"Rodinný dům", area:210, price:4800000, source:"Sreality", note:"Starší dům, zvažuje i rekonstrukci před prodejem.", status:"backlog", temp:"cold", lastCall:null},
+  {id:12, name:"Barbora Pospíšilová", phone:"+420 702 345 678", locality:"Karlovy Vary", type:"Byt 2+kk", area:58, price:3900000, source:"Doporučení", note:"Byt po babičce, sourozenci se dohodli na prodeji.", status:"backlog", temp:"warm", lastCall:"11.7.2026"},
+  {id:13, name:"David Hájek", phone:"+420 703 456 789", locality:"Jihlava", type:"Garáž", area:18, price:380000, source:"Bazoš", note:"Garáž bez auta, dlouhodobě nevyužitá.", status:"backlog", temp:"cold", lastCall:null},
+  {id:14, name:"Kristýna Jelínková", phone:"+420 704 567 890", locality:"Kladno", type:"Byt 1+kk", area:29, price:2650000, source:"Facebook inzerát", note:"Menší byt, přestěhovala se k příteli.", status:"backlog", temp:"warm", lastCall:null},
+  {id:15, name:"Ondřej Král", phone:"+420 705 678 901", locality:"Most", type:"Rodinný dům", area:130, price:3950000, source:"Vlastní databáze", note:"Práce v zahraničí, dům chce pronajmout nebo prodat.", status:"backlog", temp:"cold", lastCall:null},
+  {id:16, name:"Tereza Růžičková", phone:"+420 706 789 012", locality:"Opava", type:"Byt 3+kk", area:80, price:4700000, source:"Sreality", note:"Rozvádí se, byt jde do prodeje.", status:"backlog", temp:"hot", lastCall:"16.7.2026"},
+  {id:17, name:"Filip Beneš", phone:"+420 707 890 123", locality:"Frýdek-Místek", type:"Pozemek zemědělský", area:12000, price:1450000, source:"Poptávka z webu", note:"Zdědil pole po dědovi, nechce hospodařit.", status:"backlog", temp:"warm", lastCall:null},
+  {id:18, name:"Adéla Fialová", phone:"+420 708 901 234", locality:"Teplice", type:"Byt 2+kk", area:55, price:3200000, source:"Doporučení", note:"Chce menší byt blíž centru, tento prodává.", status:"backlog", temp:"cold", lastCall:"8.7.2026"},
+  {id:19, name:"Vojtěch Sedláček", phone:"+420 709 012 345", locality:"Děčín", type:"Chalupa", area:65, price:2400000, source:"Bazoš", note:"Chalupa na horách, málo času na údržbu.", status:"backlog", temp:"warm", lastCall:null},
+  {id:20, name:"Simona Doležalová", phone:"+420 720 123 456", locality:"Chomutov", type:"Byt 4+1", area:90, price:3100000, source:"Vlastní databáze", note:"Děti odešly z domova, byt je pro ni velký.", status:"backlog", temp:"cold", lastCall:null},
+  {id:21, name:"Radek König", phone:"+420 721 234 567", locality:"Přerov", type:"Komerční prostor", area:120, price:5900000, source:"Sreality", note:"Obchod končí činnost, prostor jde k prodeji.", status:"backlog", temp:"hot", lastCall:"13.7.2026"},
+  {id:22, name:"Nikola Bartošová", phone:"+420 722 345 678", locality:"Jablonec nad Nisou", type:"Byt 3+kk", area:74, price:4450000, source:"Doporučení", note:"Manžel dostal práci v Praze, stěhují se.", status:"backlog", temp:"warm", lastCall:null},
+  {id:23, name:"Lukáš Kopecký", phone:"+420 723 456 789", locality:"Mladá Boleslav", type:"Rodinný dům", area:165, price:6700000, source:"Poptávka z webu", note:"Dům po rodičích, oba sourozenci souhlasí s prodejem.", status:"backlog", temp:"hot", lastCall:"17.7.2026"},
+  {id:24, name:"Veronika Machová", phone:"+420 724 567 890", locality:"Prostějov", type:"Byt 1+kk", area:34, price:2250000, source:"Facebook inzerát", note:"Investice, chce vybrat kapitál na jinou koupi.", status:"backlog", temp:"cold", lastCall:null},
+  {id:25, name:"Patrik Urban", phone:"+420 725 678 901", locality:"Třebíč", type:"Kancelář", area:45, price:2800000, source:"Vlastní databáze", note:"Firma se stěhuje do většího prostoru.", status:"backlog", temp:"warm", lastCall:null},
+  {id:26, name:"Monika Vaňková", phone:"+420 726 789 012", locality:"Karviná", type:"Byt 2+kk", area:52, price:1950000, source:"Sreality", note:"Zdědila byt, sama bydlí jinde.", status:"backlog", temp:"cold", lastCall:"7.7.2026"},
+  {id:27, name:"Štěpán Kadlec", phone:"+420 727 890 123", locality:"Kolín", type:"Chata", area:38, price:1550000, source:"Bazoš", note:"Chatu už nevyužívá celá rodina.", status:"backlog", temp:"cold", lastCall:null},
+  {id:28, name:"Aneta Musilová", phone:"+420 728 901 234", locality:"Písek", type:"Byt 3+kk", area:76, price:4990000, source:"Doporučení", note:"Potřebuje kapitál na přestavbu rodinného statku.", status:"backlog", temp:"warm", lastCall:null},
+
+  // ---- MEETINGS (8) ----
+  {id:29, name:"Hana Bartoňová", phone:"+420 729 012 345", locality:"Praha 6 – Dejvice", type:"Byt 3+kk", area:82, price:8200000, source:"Sreality", note:"Schůzka k ohodnocení bytu před prodejem.", status:"meetings", meetingDate:"21.7.2026", meetingTime:"10:00"},
+  {id:30, name:"Roman Kovář", phone:"+420 730 123 456", locality:"Brno-Bystrc", type:"Rodinný dům", area:175, price:9100000, source:"Doporučení", note:"Prohlídka domu a podpis zprostředkovatelské smlouvy.", status:"meetings", meetingDate:"20.7.2026", meetingTime:"14:30"},
+  {id:31, name:"Klára Bláhová", phone:"+420 731 234 567", locality:"Olomouc", type:"Byt 2+kk", area:60, price:4600000, source:"Poptávka z webu", note:"Osobní schůzka – ocenění nemovitosti.", status:"meetings", meetingDate:"22.7.2026", meetingTime:"9:00"},
+  {id:32, name:"Tomáš Šimek", phone:"+420 732 345 678", locality:"Hradec Králové", type:"Pozemek stavební", area:900, price:2700000, source:"Vlastní databáze", note:"Schůzka na pozemku spolu s geodetem.", status:"meetings", meetingDate:"23.7.2026", meetingTime:"15:00"},
+  {id:33, name:"Ivana Dušková", phone:"+420 733 456 789", locality:"Plzeň – Lochotín", type:"Byt 4+1", area:98, price:7600000, source:"Sreality", note:"Podpis smlouvy o zprostředkování.", status:"meetings", meetingDate:"20.7.2026", meetingTime:"11:00"},
+  {id:34, name:"Marek Truhlář", phone:"+420 734 567 890", locality:"Zlín", type:"Rodinný dům", area:155, price:6300000, source:"Doporučení", note:"Prohlídka nemovitosti spolu s fotografem.", status:"meetings", meetingDate:"24.7.2026", meetingTime:"13:00"},
+  {id:35, name:"Denisa Vlková", phone:"+420 735 678 901", locality:"Liberec", type:"Byt 1+kk", area:30, price:2800000, source:"Facebook inzerát", note:"Schůzka kvůli nastavení prodejní ceny.", status:"meetings", meetingDate:"21.7.2026", meetingTime:"16:30"},
+  {id:36, name:"Jiří Sova", phone:"+420 736 789 012", locality:"České Budějovice", type:"Chata", area:42, price:1900000, source:"Bazoš", note:"Ohledání chaty a přilehlého pozemku.", status:"meetings", meetingDate:"25.7.2026", meetingTime:"10:30"},
+
+  // ---- LATER (8) ----
+  {id:37, name:"Alena Machalová", phone:"+420 737 890 123", locality:"Praha 10 – Vršovice", type:"Byt 2+kk", area:56, price:5100000, source:"Sreality", note:"Je na dovolené, zavolat až po 25.7.", status:"later", nextCallDate:"26.7.2026"},
+  {id:38, name:"Bohumil Straka", phone:"+420 738 901 234", locality:"Ostrava", type:"Rodinný dům", area:140, price:4500000, source:"Doporučení", note:"Ještě se rozmýšlí, chce čas do konce měsíce.", status:"later", nextCallDate:"31.7.2026"},
+  {id:39, name:"Zdeňka Malá", phone:"+420 739 012 345", locality:"Pardubice", type:"Byt 3+kk", area:70, price:4750000, source:"Vlastní databáze", note:"Čeká na vyřízení dědického řízení.", status:"later", nextCallDate:"5.8.2026"},
+  {id:40, name:"Karel Novotný", phone:"+420 740 123 456", locality:"Jihlava", type:"Garáž", area:20, price:320000, source:"Bazoš", note:"Chce se poradit s rodinou, zavolat za týden.", status:"later", nextCallDate:"27.7.2026"},
+  {id:41, name:"Blanka Součková", phone:"+420 741 234 567", locality:"Kutná Hora", type:"Byt 1+kk", area:33, price:2100000, source:"Poptávka z webu", note:"Nemá teď čas, zavolat příští týden.", status:"later", nextCallDate:"28.7.2026"},
+  {id:42, name:"Rudolf Havlíček", phone:"+420 742 345 678", locality:"Tábor", type:"Chalupa", area:55, price:2250000, source:"Sreality", note:"Zvažuje pronájem místo prodeje, rozmyslí si to.", status:"later", nextCallDate:"1.8.2026"},
+  {id:43, name:"Miroslava Kolářová", phone:"+420 743 456 789", locality:"Chrudim", type:"Pozemek zemědělský", area:8000, price:980000, source:"Doporučení", note:"Čeká na vyjádření dalšího spoluvlastníka.", status:"later", nextCallDate:"4.8.2026"},
+  {id:44, name:"Vladimír Pelikán", phone:"+420 744 567 890", locality:"Vsetín", type:"Byt 2+kk", area:50, price:3450000, source:"Facebook inzerát", note:"Domluveno zavolat po návratu z nemocnice.", status:"later", nextCallDate:"30.7.2026"},
+
+  // ---- ACQUIRED (8) ----
+  {id:45, name:"Zuzana Brabcová", phone:"+420 745 678 901", locality:"Praha 5 – Smíchov", type:"Byt 3+kk", area:85, price:9500000, source:"Sreality", note:"Podepsána exkluzivní smlouva, inzerát se připravuje.", status:"acquired", acquiredDate:"15.7.2026", exclusivity:"Ano", commission:"3 %"},
+  {id:46, name:"Pavel Bureš", phone:"+420 746 789 012", locality:"Brno-Černá Pole", type:"Rodinný dům", area:190, price:10200000, source:"Doporučení", note:"Nemovitost nafocena, čeká se na home staging.", status:"acquired", acquiredDate:"12.7.2026", exclusivity:"Ano", commission:"2,5 %"},
+  {id:47, name:"Ludmila Kubíková", phone:"+420 747 890 123", locality:"Znojmo", type:"Byt 2+kk", area:62, price:4100000, source:"Vlastní databáze", note:"Inzerát aktivní, první prohlídky domluveny.", status:"acquired", acquiredDate:"10.7.2026", exclusivity:"Ne", commission:"4 %"},
+  {id:48, name:"Antonín Fiala", phone:"+420 748 901 234", locality:"Beroun", type:"Chata", area:48, price:2350000, source:"Poptávka z webu", note:"Exkluzivní zakázka, čeká se na dokumentaci k pozemku.", status:"acquired", acquiredDate:"8.7.2026", exclusivity:"Ano", commission:"3 %"},
+  {id:49, name:"Helena Doskočilová", phone:"+420 749 012 345", locality:"Trutnov", type:"Byt 4+1", area:100, price:6900000, source:"Sreality", note:"Vystaveno na portálech, zájem od tří zájemců.", status:"acquired", acquiredDate:"5.7.2026", exclusivity:"Ano", commission:"2,5 %"},
+  {id:50, name:"Josef Rada", phone:"+420 750 123 456", locality:"Kolín", type:"Pozemek stavební", area:1100, price:3300000, source:"Bazoš", note:"Podepsána smlouva, čeká se na geometrický plán.", status:"acquired", acquiredDate:"14.7.2026", exclusivity:"Ne", commission:"3,5 %"},
+  {id:51, name:"Marta Krejčová", phone:"+420 751 234 567", locality:"Prostějov", type:"Komerční prostor", area:200, price:7800000, source:"Doporučení", note:"Exkluzivně zastupujeme, jednáme se dvěma zájemci.", status:"acquired", acquiredDate:"2.7.2026", exclusivity:"Ano", commission:"3 %"},
+  {id:52, name:"Stanislav Doubek", phone:"+420 752 345 678", locality:"Karviná", type:"Rodinný dům", area:120, price:3600000, source:"Facebook inzerát", note:"Podepsáno, čeká se na focení interiéru.", status:"acquired", acquiredDate:"16.7.2026", exclusivity:"Ano", commission:"3 %"}
+];
+
+/* ---- Expand the backlog pool to a realistic call-center scale (~150+) ---- */
+(function generateMoreBacklogContacts(){
+  const MALE_NAMES = ["Petr","Jan","Tomáš","Martin","Jakub","Michal","David","Ondřej","Filip","Vojtěch","Radek","Lukáš","Patrik","Štěpán","Marek","Karel","Rudolf","Vladimír","Antonín","Josef","Pavel","Stanislav","Roman","Jiří","Zdeněk","Milan","František","Václav","Ladislav","Bohumil","Miroslav","Aleš","Daniel","Adam","Matěj","Šimon","Dominik","Kryštof","Viktor","Robert","Igor","Vít","Bruno","Otakar","Vlastimil"];
+  const FEMALE_NAMES = ["Jana","Eva","Lucie","Petra","Kateřina","Barbora","Kristýna","Tereza","Adéla","Simona","Nikola","Veronika","Monika","Aneta","Hana","Klára","Denisa","Zuzana","Ludmila","Helena","Marta","Blanka","Miroslava","Alena","Zdeňka","Ivana","Michaela","Jitka","Markéta","Andrea","Renata","Lenka","Kamila","Vlasta","Olga","Iveta","Dagmar","Silvie","Pavlína","Gabriela","Natálie","Eliška","Anna","Julie","Karolína"];
+  const MALE_SURNAMES = ["Novák","Svoboda","Dvořák","Černý","Procházka","Kučera","Veselý","Horák","Němec","Pokorný","Pospíšil","Hájek","Jelínek","Král","Růžička","Beneš","Fiala","Sedláček","Doležal","König","Bartoš","Kopecký","Machala","Urban","Vaněk","Kadlec","Musil","Bartoň","Kovář","Bláha","Šimek","Dušek","Truhlář","Vlk","Sova","Straka","Malý","Havlíček","Kolář","Pelikán","Brabec","Bureš","Kubík","Doskočil","Rada","Krejčí","Doubek","Zeman","Krátký","Vávra","Blažek","Šťastný","Skalický","Kalous","Fojtík"];
+  const FEMALE_SURNAMES = ["Nováková","Svobodová","Dvořáková","Černá","Procházková","Kučerová","Veselá","Horáková","Němcová","Pokorná","Pospíšilová","Hájková","Jelínková","Králová","Růžičková","Benešová","Fialová","Sedláčková","Doležalová","Bartošová","Kopecká","Machalová","Urbanová","Vaňková","Kadlecová","Musilová","Bartoňová","Kovářová","Bláhová","Šimková","Dušková","Truhlářová","Vlková","Sovová","Straková","Malá","Havlíčková","Kolářová","Pelikánová","Brabcová","Burešová","Kubíková","Doskočilová","Radová","Krejčová","Doubková","Zemanová","Krátká","Vávrová","Blažková","Šťastná","Skalická","Kalousová","Fojtíková"];
+  const LOCALITIES = ["Praha 1","Praha 2","Praha 4 – Braník","Praha 5 – Smíchov","Praha 6 – Dejvice","Praha 8 – Karlín","Praha 9","Praha 10 – Vršovice","Praha-západ (Jesenice)","Brno-střed","Brno-Žabovřesky","Brno-Bystrc","Brno-Černá Pole","Ostrava-Poruba","Ostrava-Vítkovice","Plzeň-Doubravka","Plzeň – Lochotín","Olomouc","Liberec","Hradec Králové","Pardubice","Zlín","České Budějovice","Ústí nad Labem","Karlovy Vary","Jihlava","Kladno","Most","Opava","Frýdek-Místek","Teplice","Děčín","Chomutov","Přerov","Jablonec nad Nisou","Mladá Boleslav","Prostějov","Třebíč","Karviná","Kolín","Písek","Trutnov","Beroun","Kutná Hora","Vsetín","Znojmo","Tábor","Chrudim","Cheb","Sokolov","Vyškov","Havířov","Krnov","Šumperk","Uherské Hradiště","Kroměříž","Rakovník","Příbram","Strakonice","Klatovy","Jindřichův Hradec","Pelhřimov","Havlíčkův Brod","Žďár nad Sázavou","Svitavy","Ústí nad Orlicí","Náchod","Jičín","Turnov","Mělník","Litoměřice","Louny","Nymburk","Benešov","Blansko","Hodonín","Břeclav"];
+  const TYPE_CONFIG = {
+    "Byt 1+kk":{areaMin:25,areaMax:38,priceMin:2100000,priceMax:3400000},
+    "Byt 2+kk":{areaMin:45,areaMax:62,priceMin:3200000,priceMax:5400000},
+    "Byt 3+kk":{areaMin:65,areaMax:85,priceMin:4500000,priceMax:7500000},
+    "Byt 4+1":{areaMin:88,areaMax:120,priceMin:6000000,priceMax:9500000},
+    "Rodinný dům":{areaMin:110,areaMax:220,priceMin:3800000,priceMax:12500000},
+    "Chata":{areaMin:28,areaMax:60,priceMin:1200000,priceMax:2900000},
+    "Chalupa":{areaMin:45,areaMax:90,priceMin:1600000,priceMax:3800000},
+    "Pozemek stavební":{areaMin:600,areaMax:1400,priceMin:900000,priceMax:4200000},
+    "Pozemek zemědělský":{areaMin:3000,areaMax:20000,priceMin:400000,priceMax:2600000},
+    "Komerční prostor":{areaMin:60,areaMax:250,priceMin:2800000,priceMax:8900000},
+    "Kancelář":{areaMin:25,areaMax:90,priceMin:1800000,priceMax:4600000},
+    "Garáž":{areaMin:15,areaMax:24,priceMin:220000,priceMax:520000},
+  };
+  const SOURCES = ["Sreality","Doporučení","Vlastní databáze","Poptávka z webu","Facebook inzerát","Bazoš","Realitní seminář","Telefonická poptávka"];
+  const PHONE_PREFIXES = ["601","602","603","604","605","606","607","608","700","701","702","720","721","722","723","724","725","730","731","732","733","734","735","736","737","738","739","740","741","742","743","744","745","746","747","748","749","750","751","752"];
+  const NOTES = [
+    "Zvažuje prodej po dědictví.","Stěhuje se za prací do jiného města.","Rozvod, řeší vypořádání majetku.",
+    "Nemovitost už nevyužívá, zvažuje pronájem nebo prodej.","Chce nejdřív najít nové bydlení.",
+    "Rodina se rozrůstá, hledá větší bydlení.","Děti se odstěhovaly, nemovitost je teď velká.",
+    "Zdědil/a nemovitost po rodičích.","Firma se stěhuje do většího prostoru.",
+    "Nemovitost dlouhodobě nevyužívaná.","Zvažuje prodej kvůli stěhování do zahraničí.",
+    "Chce uvolnit kapitál na jinou investici.","Nemovitost po rekonstrukci, chce prodat rychle.",
+    "Spoluvlastníci se dohodli na prodeji.","Prodej kvůli zdravotním důvodům.",
+    "Nemovitost už rodina nevyužívá k rekreaci.","Zvažuje prodej, zatím jen orientační odhad ceny.",
+    "Byla oslovena konkurenční kanceláří, zvažuje nabídky.","Plánuje prodej až za pár měsíců.",
+    "Hledá makléře s doporučením od známých."
+  ];
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randInt(min,max){ return Math.floor(min + Math.random()*(max-min+1)); }
+  function roundPrice(p){ return Math.round(p/10000)*10000; }
+
+  const types = Object.keys(TYPE_CONFIG);
+  let nextId = Math.max(...contacts.map(c=>c.id)) + 1;
+  const EXTRA_BACKLOG_COUNT = 130; // 28 curated + 130 generated ≈ 158 in the backlog pool
+
+  for(let i=0; i<EXTRA_BACKLOG_COUNT; i++){
+    const isMale = Math.random() < 0.5;
+    const name = `${isMale ? pick(MALE_NAMES) : pick(FEMALE_NAMES)} ${isMale ? pick(MALE_SURNAMES) : pick(FEMALE_SURNAMES)}`;
+    const type = pick(types);
+    const cfg = TYPE_CONFIG[type];
+    const tempRoll = Math.random();
+    const temp = tempRoll < 0.14 ? 'hot' : (tempRoll < 0.55 ? 'warm' : 'cold');
+    contacts.push({
+      id: nextId++,
+      name,
+      phone: `+420 ${pick(PHONE_PREFIXES)} ${randInt(100,999)} ${randInt(100,999)}`,
+      locality: pick(LOCALITIES),
+      type,
+      area: randInt(cfg.areaMin, cfg.areaMax),
+      price: roundPrice(randInt(cfg.priceMin, cfg.priceMax)),
+      source: pick(SOURCES),
+      note: pick(NOTES),
+      status: "backlog",
+      temp,
+      lastCall: Math.random() < 0.35 ? `${randInt(1,19)}.7.2026` : null
+    });
+  }
+})();
+
+/* ================= HELPERS ================= */
+const STATUS_LABEL = {backlog:"Kontakty", meetings:"Schůzky", later:"Zavolat", acquired:"Získané"};
+const STATUS_COLOR = {backlog:"var(--c-backlog)", meetings:"var(--c-meetings)", later:"var(--c-later)", acquired:"var(--c-acquired)"};
+const STATUS_BG = {backlog:"var(--c-backlog-bg)", meetings:"var(--c-meetings-bg)", later:"var(--c-later-bg)", acquired:"var(--c-acquired-bg)"};
+const TEMP_LABEL = {hot:"Horký lead", warm:"Teplý lead", cold:"Studený lead"};
+
+function fmtCZK(n){ return n.toLocaleString('cs-CZ') + ' Kč'; }
+function fmtArea(n){ return n.toLocaleString('cs-CZ') + ' m²'; }
+function esc(s){ return (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function getContact(id){ return contacts.find(c => c.id === Number(id)); }
+
+function toEmail(name){
+  const clean = name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return clean.trim().split(/\s+/).join('.') + '@email.cz';
+}
+contacts.forEach(c => {
+  c.email = toEmail(c.name);
+  // "queued" = pulled from the backlog pool into today's Kanban work queue.
+  // Only status:"backlog" contacts use this flag; start the day with the hot leads already queued.
+  if(c.status === 'backlog') c.queued = (c.temp === 'hot');
+});
+
+// lucide-style icons, matching the Figma "Card Backlog / Molecule" component
+const ICON_PHONE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.81.35 1.6.67 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.74-1.24a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.67A2 2 0 0 1 22 16.92z"/></svg>`;
+const ICON_PIN = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-8a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const ICON_LOCK = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+const ICON_CALENDAR = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>`;
+const ICON_CLOCK = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>`;
+const ICON_KEY = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>`;
+
+// short catchy blurb per property type — stands in for the Figma "Description" slot (e.g. "moderní dřevostavba")
+const BLURBS = {
+  "Byt 1+kk":["útulný byt pro jednoho", "menší byt blízko centra", "byt vhodný k investici"],
+  "Byt 2+kk":["světlý byt v klidné lokalitě", "byt po rekonstrukci", "byt s balkonem"],
+  "Byt 3+kk":["prostorný rodinný byt", "byt s výhledem do zeleně", "byt po částečné rekonstrukci"],
+  "Byt 4+1":["velkorysý rodinný byt", "byt vhodný pro větší rodinu"],
+  "Rodinný dům":["prostorný dům se zahradou", "dům po rekonstrukci", "dům s garáží a dílnou"],
+  "Chata":["chata k celoroční rekreaci", "chata s velkou zahradou"],
+  "Chalupa":["chalupa s výhledem na hory", "chalupa vhodná k rekreaci"],
+  "Pozemek stavební":["rovinatý stavební pozemek", "pozemek v klidné obci"],
+  "Pozemek zemědělský":["zemědělská půda v dobré bonitě", "orná půda s přístupovou cestou"],
+  "Komerční prostor":["prostor vhodný k podnikání", "obchodní prostor v centru"],
+  "Kancelář":["kancelář v administrativní budově", "kancelářský prostor open space"],
+  "Garáž":["zděná garáž v sídlišti", "garáž s elektřinou"]
+};
+function descriptionFor(c){
+  const pool = BLURBS[c.type] || ["zajímavá nabídka k prodeji"];
+  return pool[c.id % pool.length];
+}
+// deterministic "reserved to you" countdown for queued backlog leads
+/* ================= CLAIM / COUNTDOWN ================= */
+// How long a claimed backlog contact stays exclusive to the agent who claimed it,
+// based on how "contested" that lead source typically is.
+const SOURCE_DURATION_HOURS = {
+  "Sreality": 1,
+  "Poptávka z webu": 1,
+  "Facebook inzerát": 8,
+  "Bazoš": 8,
+  "Telefonická poptávka": 8,
+  "Realitní seminář": 8,
+  "Doporučení": 24,
+  "Vlastní databáze": 24,
+};
+function getClaimDurationHours(source){ return SOURCE_DURATION_HOURS[source] ?? 8; }
+
+function getRemainingMs(c){
+  if(!c.claimedAt || !c.claimDurationHours) return null;
+  const totalMs = c.claimDurationHours * 3600000;
+  return (c.claimedAt + totalMs) - Date.now();
+}
+function isExpired(c){ const r = getRemainingMs(c); return r !== null && r <= 0; }
+function isCriticalExpiry(c){ const r = getRemainingMs(c); return r !== null && r > 0 && r <= 15*60000; }
+function isNearExpiry(c){
+  const r = getRemainingMs(c);
+  if(r === null || r <= 0) return false;
+  return r <= (c.claimDurationHours * 3600000) * 0.2;
+}
+function formatCountdown(c){
+  const r = getRemainingMs(c);
+  if(r === null) return '—';
+  if(r <= 0) return 'Vypršelo';
+  const totalMinutes = Math.ceil(r / 60000);
+  if(c.claimDurationHours === 1) return `${totalMinutes} min`;
+  return `${Math.ceil(totalMinutes/60)} h`;
+}
+
+function claimContacts(ids){
+  const now = Date.now();
+  let claimed = 0;
+  ids.forEach(id => {
+    const c = getContact(id);
+    if(!c || c.status !== 'backlog' || c.queued) return;
+    c.queued = true;
+    c.claimedAt = now;
+    c.claimDurationHours = getClaimDurationHours(c.source);
+    if(!c.temp) c.temp = 'warm';
+    claimed++;
+  });
+  return claimed;
+}
+function unclaimContact(id){
+  const c = getContact(id);
+  if(!c) return;
+  c.queued = false;
+  c.claimedAt = null;
+  c.claimDurationHours = null;
+}
+
+/* ================= BACKLOG SELECTION ================= */
+let selectedBacklogIds = new Set();
+function toggleSelect(id){
+  id = Number(id);
+  if(selectedBacklogIds.has(id)) selectedBacklogIds.delete(id); else selectedBacklogIds.add(id);
+  renderDrawer();
+}
+function clearSelection(){ selectedBacklogIds.clear(); renderDrawer(); }
+function claimSelected(){
+  const ids = [...selectedBacklogIds];
+  const n = claimContacts(ids);
+  selectedBacklogIds.clear();
+  renderBoard(); renderDrawer();
+  showToast(`${n} ${n === 1 ? 'kontakt přesunut' : (n < 5 ? 'kontakty přesunuty' : 'kontaktů přesunuto')} do dnešní fronty k provolání.`);
+}
+
+/* ================= EXPIRY WATCH ================= */
+const alertedCriticalIds = new Set();
+function expiryTick(){
+  const queued = contacts.filter(c => c.status === 'backlog' && c.queued);
+  let changed = false;
+  queued.forEach(c => {
+    if(isExpired(c)){
+      showToast(`⏱ ${c.name} — čas vypršel, kontakt se vrátil do sdíleného backlogu.`);
+      unclaimContact(c.id);
+      alertedCriticalIds.delete(c.id);
+      changed = true;
+    } else if(isCriticalExpiry(c) && !alertedCriticalIds.has(c.id)){
+      alertedCriticalIds.add(c.id);
+      showToast(`⚠ ${c.name} — méně než 15 minut do vypršení rezervace!`);
+    }
+  });
+  renderBoard();
+  if(changed) renderDrawer();
+}
+setInterval(expiryTick, 20000);
+
+function parseCzDate(str){
+  if(!str) return 0;
+  const parts = str.split('.').map(s => parseInt(s, 10));
+  const [d, m, y] = parts;
+  return new Date(y || 2026, (m || 1) - 1, d || 1).getTime();
+}
+function parseCzTime(str){
+  if(!str) return 0;
+  const [h, mi] = str.split(':').map(Number);
+  return (h || 0) * 60 + (mi || 0);
+}
+
+let activeId = null;
+let pendingAction = null;
+
+/* ================= FILTERS ================= */
+function populateTypeFilter(){
+  const sel = document.getElementById('typeFilter');
+  const types = [...new Set(contacts.map(c => c.type))].sort();
+  sel.innerHTML = '<option value="all">Všechny typy nemovitostí</option>' +
+    types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+}
+
+function matchesFilters(c){
+  const term = document.getElementById('searchInput').value.trim().toLowerCase();
+  const type = document.getElementById('typeFilter').value;
+  if(term){
+    const hay = `${c.name} ${c.locality} ${c.phone} ${c.type} ${c.note}`.toLowerCase();
+    if(!hay.includes(term)) return false;
+  }
+  if(type !== 'all' && c.type !== type) return false;
+  return true;
+}
+
+/* ================= RENDER BOARD ================= */
+function cardMetaLine(c){
+  if(c.status === 'backlog') return c.lastCall ? `Poslední kontakt: ${c.lastCall}` : `Dosud nekontaktováno`;
+  if(c.status === 'meetings') return `📅 ${c.meetingDate} • ${c.meetingTime}`;
+  if(c.status === 'later') return `🔁 Zavolat: ${c.nextCallDate}`;
+  if(c.status === 'acquired') return `Nabráno: ${c.acquiredDate} • Exkluzivita: ${c.exclusivity} • Provize ${c.commission}`;
+  return '';
+}
+function footerHint(c){
+  if(c.status === 'backlog') return c.lastCall ? `Poslední kontakt: ${esc(c.lastCall)}` : 'Dosud nekontaktováno';
+  if(c.status === 'acquired') return `Nabráno ${esc(c.acquiredDate)} • Exkl.: ${esc(c.exclusivity)}`;
+  return `Zdroj: ${esc(c.source)}`;
+}
+
+function renderCard(c){
+  return renderStandardCard(c);
+}
+
+/* Figma "Card Backlog / Molecule" (node 9:58) — used inside the Backlog drawer/panel */
+function renderBacklogPanelCard(c){
+  const selected = selectedBacklogIds.has(c.id);
+  return `
+  <div class="card card-backlog-molecule${selected ? ' selected' : ''}" draggable="true" data-id="${c.id}" tabindex="0" role="button" aria-pressed="${selected}" aria-label="Vybrat kartu kontaktu ${esc(c.name)}" onclick="toggleSelect(${c.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); toggleSelect(${c.id});}" ondragstart="dragBacklogCardStart(event, ${c.id})" ondragend="dragBacklogCardEnd(event)">
+    <span class="select-check" aria-hidden="true">${selected ? '✓' : ''}</span>
+    <div class="molecule-header">
+      <div class="molecule-header-left">
+        <span class="molecule-phone-icon">${ICON_PHONE}</span>
+        <div class="molecule-texts">
+          <div class="molecule-name">${esc(c.name)}</div>
+          <a class="molecule-phone" href="tel:${esc(c.phone.replace(/\s/g,''))}" onclick="event.stopPropagation()">${esc(c.phone)}</a>
+          <div class="molecule-email">${esc(c.email)}</div>
+        </div>
+      </div>
+      <div class="molecule-time">${c.lastCall ? esc(c.lastCall) : 'Nový kontakt'}</div>
+    </div>
+    <div class="molecule-body">
+      <div class="molecule-row molecule-row-strong">${esc(c.type)} · ${fmtArea(c.area)}</div>
+      <div class="molecule-row">Prodej · ${fmtCZK(c.price)}</div>
+      <div class="molecule-row molecule-note">${esc(c.note)}</div>
+      <div class="molecule-row molecule-location">
+        <span class="molecule-pin-icon">${ICON_PIN}</span><span>${esc(c.locality)} (${esc(c.source)})</span>
+      </div>
+    </div>
+    <div class="molecule-footer">
+      <div class="molecule-footer-right">
+        <button class="call-btn" title="Zobrazit detail kontaktu" onclick="event.stopPropagation(); openModal(${c.id});">☎</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Figma "Kanban Board - Unit" → "Card Kanban - Molecule" (node 224:14312) — used for every card on the kanban board itself */
+function statusAtom(c){
+  if(c.status === 'backlog') return `<span class="kanban-status-icon">${ICON_LOCK}</span><span class="kanban-status-text">${esc(formatCountdown(c))}</span>`;
+  if(c.status === 'meetings') return `<span class="kanban-status-icon">${ICON_CALENDAR}</span><span class="kanban-status-text">${esc(c.meetingDate)}<br>${esc(c.meetingTime)}</span>`;
+  if(c.status === 'later') return `<span class="kanban-status-icon">${ICON_CLOCK}</span><span class="kanban-status-text">${esc(c.nextCallDate)}</span>`;
+  if(c.status === 'acquired') return `<span class="kanban-status-icon">${ICON_KEY}</span><span class="kanban-status-text">${esc(c.commission)}</span>`;
+  return '';
+}
+function renderStandardCard(c){
+  const nearExpiry = c.status === 'backlog' && c.queued && isNearExpiry(c);
+  return `
+  <div class="card kanban-molecule${nearExpiry ? ' near-expiry' : ''}" draggable="true" data-id="${c.id}" tabindex="0" role="button" aria-label="Karta kontaktu ${esc(c.name)}">
+    <div class="molecule-header">
+      <div class="molecule-header-left">
+        <span class="molecule-phone-icon">${ICON_PHONE}</span>
+        <div class="molecule-texts">
+          <div class="molecule-name">${esc(c.name)}</div>
+          <a class="molecule-phone" href="tel:${esc(c.phone.replace(/\s/g,''))}" onclick="event.stopPropagation()">${esc(c.phone)}</a>
+          <div class="molecule-email">${esc(c.email)}</div>
+        </div>
+      </div>
+      <div class="kanban-status">${statusAtom(c)}</div>
+    </div>
+    <div class="molecule-body">
+      <div class="molecule-row molecule-row-strong">${esc(descriptionFor(c))}</div>
+      <div class="molecule-row">Prodej · ${fmtCZK(c.price)}</div>
+      <div class="molecule-row">${esc(c.type)} · ${fmtArea(c.area)}</div>
+      <div class="molecule-row molecule-location">
+        <span class="molecule-pin-icon">${ICON_PIN}</span><span>${esc(c.locality)}</span>
+      </div>
+    </div>
+    <div class="molecule-footer">
+      <div class="molecule-footer-right">
+        <span class="kanban-footer-hint">${footerHint(c)}</span>
+        <button class="call-btn" title="Otevřít kartu kontaktu" onclick="event.stopPropagation(); openModal(${c.id});">☎</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderBoard(){
+  ['backlog','meetings','later','acquired'].forEach(status => {
+    let list = status === 'backlog'
+      ? contacts.filter(c => c.status === 'backlog' && c.queued && matchesFilters(c))
+      : contacts.filter(c => c.status === status && matchesFilters(c));
+
+    if(status === 'meetings') list.sort((a,b)=> (parseCzDate(a.meetingDate)+parseCzTime(a.meetingTime)) - (parseCzDate(b.meetingDate)+parseCzTime(b.meetingTime)));
+    if(status === 'later') list.sort((a,b)=> parseCzDate(a.nextCallDate) - parseCzDate(b.nextCallDate));
+    if(status === 'acquired') list.sort((a,b)=> parseCzDate(b.acquiredDate) - parseCzDate(a.acquiredDate));
+    if(status === 'backlog') { const order={hot:0,warm:1,cold:2}; list.sort((a,b)=> (order[a.temp]??3)-(order[b.temp]??3)); }
+
+    const container = document.getElementById('cards-'+status);
+    const queuedTotal = contacts.filter(c => c.status === 'backlog' && c.queued).length;
+    if(status === 'backlog' && queuedTotal === 0){
+      container.innerHTML = `<div class="empty-hint">Fronta na dnešek je prázdná.<br><button class="btn primary small" style="margin-top:10px" onclick="openBacklogPanel()">📂 Otevřít Backlog</button></div>`;
+    } else {
+      container.innerHTML = list.length
+        ? list.map(renderCard).join('')
+        : `<div class="empty-hint">Žádné kontakty neodpovídají filtru.</div>`;
+    }
+    document.getElementById('count-'+status).textContent = status === 'backlog' ? queuedTotal : contacts.filter(c=>c.status===status).length;
+  });
+
+  // attach drag/click handlers to Kanban board cards only (the Backlog drawer has its own renderer)
+  document.getElementById('board').querySelectorAll('.card').forEach(card => {
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('click', () => openModal(card.dataset.id));
+    card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openModal(card.dataset.id); } });
+  });
+
+}
+
+/* ================= DROPZONES ================= */
+document.querySelectorAll('.cards').forEach(zone => {
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const id = e.dataTransfer.getData('text/plain');
+    const newStatus = zone.closest('.column').dataset.status;
+    handleDrop(id, newStatus);
+  });
+});
+
+function handleDrop(id, newStatus){
+  const c = getContact(id);
+  if(!c || (c.status === newStatus && !(newStatus==='backlog' && c.queued))) return;
+  if(newStatus === 'backlog'){
+    c.status = 'backlog';
+    unclaimContact(c.id);
+    renderBoard(); renderDrawer();
+    showToast(`${c.name} přesunut/a zpět do sdíleného backlogu.`);
+    return;
+  }
+  // needs extra data -> open modal with the relevant action form pre-triggered
+  openModal(id);
+  triggerActionForm(newStatus);
+}
+
+/* ================= MODAL ================= */
+function openModal(id){
+  activeId = Number(id);
+  pendingAction = null;
+  document.getElementById('modalOverlay').classList.add('open');
+  renderModal();
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  activeId = null;
+  pendingAction = null;
+}
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  if(document.getElementById('modalOverlay').classList.contains('open')) closeModal();
+  else if(backlogPanelOpen) closeBacklogPanel();
+});
+
+function renderModal(){
+  const c = getContact(activeId);
+  if(!c) return;
+  const modal = document.getElementById('modal');
+
+  let banner = '';
+  if(c.status === 'meetings') banner = `<div class="status-banner" style="background:${STATUS_BG.meetings}; color:${STATUS_COLOR.meetings}">📅 Schůzka domluvena na ${c.meetingDate} v ${c.meetingTime}</div>`;
+  if(c.status === 'later') banner = `<div class="status-banner" style="background:${STATUS_BG.later}; color:${STATUS_COLOR.later}">🔁 Naplánován zpětný hovor na ${c.nextCallDate}</div>`;
+  if(c.status === 'acquired') banner = `<div class="status-banner" style="background:${STATUS_BG.acquired}; color:${STATUS_COLOR.acquired}">🏠 Nemovitost nabrána ${c.acquiredDate} • Exkluzivita: ${c.exclusivity} • Provize ${c.commission}</div>`;
+
+  const tempRow = (c.status === 'backlog' && c.temp) ? `
+    <div class="meta-item"><div class="label">Teplota leadu</div><div class="value">${TEMP_LABEL[c.temp]}</div></div>` : '';
+
+  modal.innerHTML = `
+    <div class="modal-head">
+      <div>
+        <h2>${esc(c.name)}</h2>
+        <a href="tel:${esc(c.phone.replace(/\\s/g,''))}">${esc(c.phone)}</a>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Zavřít">✕</button>
+    </div>
+    <div class="modal-body">
+      ${banner}
+      <div class="meta-grid">
+        <div class="meta-item"><div class="label">Lokalita</div><div class="value">${esc(c.locality)}</div></div>
+        <div class="meta-item"><div class="label">Typ nemovitosti</div><div class="value">${esc(c.type)}</div></div>
+        <div class="meta-item"><div class="label">Plocha</div><div class="value">${fmtArea(c.area)}</div></div>
+        <div class="meta-item"><div class="label">Cena / odhad</div><div class="value">${fmtCZK(c.price)}</div></div>
+        <div class="meta-item"><div class="label">Zdroj kontaktu</div><div class="value">${esc(c.source)}</div></div>
+        <div class="meta-item"><div class="label">Sloupec</div><div class="value">${STATUS_LABEL[c.status]}</div></div>
+        ${tempRow}
+      </div>
+
+      <label class="note-label" for="noteField">Poznámka z hovoru</label>
+      <textarea id="noteField" class="note-field">${esc(c.note)}</textarea>
+
+      <div class="action-row" id="actionRow">
+        ${renderActionButtons(c)}
+      </div>
+      <div id="actionFormArea"></div>
+
+      <div class="action-row" style="margin-top:14px; border-top:1px solid var(--line); padding-top:14px;">
+        <button class="btn primary small" onclick="saveNote()">💾 Uložit poznámku</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderActionButtons(c){
+  let buttons = '';
+  if(c.status !== 'meetings') buttons += `<button class="btn" onclick="triggerActionForm('meetings')">📅 Domluvit schůzku</button>`;
+  if(c.status !== 'later') buttons += `<button class="btn" onclick="triggerActionForm('later')">🔁 Zavolat později</button>`;
+  if(c.status !== 'acquired') buttons += `<button class="btn" onclick="triggerActionForm('acquired')">🏠 Nabral/a nemovitost</button>`;
+  if(c.status === 'backlog' && !c.queued) buttons += `<button class="btn primary" onclick="claimContacts([${c.id}]); renderBoard(); renderDrawer(); renderModal(); showToast('${esc(c.name)} přesunut/a do dnešní fronty k provolání.');">📥 Převzít do fronty</button>`;
+  if(c.status !== 'backlog') buttons += `<button class="btn" onclick="moveTo('backlog')">↩ Zpět do zásobníku</button>`;
+  if(c.status === 'backlog' && c.queued) buttons += `<button class="btn" onclick="unclaimContact(${c.id}); renderBoard(); renderDrawer(); renderModal(); showToast('${esc(c.name)} odebrán/a z dnešní fronty.');">➖ Odebrat z dnešní fronty</button>`;
+  if(c.status !== 'acquired') buttons += `<button class="btn ghost-danger" onclick="archiveContact()">✖ Nezájem – archivovat</button>`;
+  return buttons;
+}
+
+function triggerActionForm(type){
+  pendingAction = type;
+  const area = document.getElementById('actionFormArea');
+  if(type === 'meetings'){
+    area.innerHTML = `
+      <div class="action-form">
+        <h4>Domluvit schůzku</h4>
+        <div class="form-row">
+          <div class="form-field"><label>Datum</label><input type="text" id="f-meetingDate" placeholder="např. 24.7.2026"></div>
+          <div class="form-field"><label>Čas</label><input type="text" id="f-meetingTime" placeholder="např. 14:00"></div>
+        </div>
+        <button class="btn primary small" onclick="confirmMeeting()">Potvrdit schůzku</button>
+        <button class="btn small" onclick="cancelActionForm()">Zrušit</button>
+      </div>`;
+  } else if(type === 'later'){
+    area.innerHTML = `
+      <div class="action-form">
+        <h4>Naplánovat zpětný hovor</h4>
+        <div class="form-row">
+          <div class="form-field"><label>Zavolat znovu dne</label><input type="text" id="f-nextCall" placeholder="např. 28.7.2026"></div>
+        </div>
+        <button class="btn primary small" onclick="confirmLater()">Potvrdit termín</button>
+        <button class="btn small" onclick="cancelActionForm()">Zrušit</button>
+      </div>`;
+  } else if(type === 'acquired'){
+    area.innerHTML = `
+      <div class="action-form">
+        <h4>Nabrání nemovitosti</h4>
+        <div class="form-row">
+          <div class="form-field"><label>Exkluzivita</label>
+            <select id="f-exclusivity"><option value="Ano">Ano</option><option value="Ne">Ne</option></select>
+          </div>
+          <div class="form-field"><label>Provize</label><input type="text" id="f-commission" placeholder="např. 3 %"></div>
+        </div>
+        <button class="btn primary small" onclick="confirmAcquired()">Potvrdit nabrání</button>
+        <button class="btn small" onclick="cancelActionForm()">Zrušit</button>
+      </div>`;
+  }
+}
+
+function cancelActionForm(){
+  pendingAction = null;
+  document.getElementById('actionFormArea').innerHTML = '';
+}
+
+function confirmMeeting(){
+  const c = getContact(activeId);
+  const date = document.getElementById('f-meetingDate').value.trim() || 'nezadáno';
+  const time = document.getElementById('f-meetingTime').value.trim() || '—';
+  c.status = 'meetings'; c.meetingDate = date; c.meetingTime = time;
+  renderBoard(); renderModal();
+  showToast(`Schůzka s ${c.name} naplánována na ${date} ${time}.`);
+}
+function confirmLater(){
+  const c = getContact(activeId);
+  const date = document.getElementById('f-nextCall').value.trim() || 'nezadáno';
+  c.status = 'later'; c.nextCallDate = date;
+  renderBoard(); renderModal();
+  showToast(`${c.name} přesunut/a do „Zavolat“ (${date}).`);
+}
+function confirmAcquired(){
+  const c = getContact(activeId);
+  const excl = document.getElementById('f-exclusivity').value;
+  const comm = document.getElementById('f-commission').value.trim() || '—';
+  c.status = 'acquired'; c.exclusivity = excl; c.commission = comm; c.acquiredDate = new Date().toLocaleDateString('cs-CZ');
+  renderBoard(); renderModal();
+  showToast(`🏠 Nemovitost od ${c.name} nabrána do portfolia!`);
+}
+function moveTo(status){
+  const c = getContact(activeId);
+  c.status = status;
+  if(status === 'backlog'){ unclaimContact(c.id); }
+  renderBoard(); renderModal();
+  showToast(`${c.name} přesunut/a do „${STATUS_LABEL[status]}“.`);
+}
+function archiveContact(){
+  const c = getContact(activeId);
+  contacts = contacts.filter(x => x.id !== c.id);
+  closeModal(); renderBoard();
+  showToast(`${c.name} byl/a archivován/a (bez zájmu).`);
+}
+function saveNote(){
+  const c = getContact(activeId);
+  c.note = document.getElementById('noteField').value;
+  c.lastCall = new Date().toLocaleDateString('cs-CZ');
+  renderBoard(); renderModal();
+  showToast('Poznámka uložena.');
+}
+
+/* ================= BACKLOG DRAWER (slide-out panel) ================= */
+let backlogPanelOpen = false;
+let backlogVisibleCount = 12;
+const BACKLOG_PAGE_SIZE = 12;
+
+function openBacklogPanel(){
+  backlogPanelOpen = true;
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('backlogToggleBtn').setAttribute('aria-pressed', 'true');
+  document.body.style.overflow = 'hidden';
+  renderDrawer();
+}
+function closeBacklogPanel(){
+  backlogPanelOpen = false;
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('backlogToggleBtn').setAttribute('aria-pressed', 'false');
+  document.body.style.overflow = '';
+}
+function toggleBacklogPanel(){ backlogPanelOpen ? closeBacklogPanel() : openBacklogPanel(); }
+
+function toggleTooltip(e, tipId){
+  e.stopPropagation();
+  const tip = document.getElementById(tipId);
+  const btn = e.currentTarget;
+  const open = tip.classList.toggle('open');
+  btn.setAttribute('aria-expanded', String(open));
+}
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.help-tooltip.open').forEach(tip => {
+    const wrap = tip.closest('.h1-wrap, .drawer-title-wrap');
+    if(!wrap || !wrap.contains(e.target)){
+      tip.classList.remove('open');
+      const btn = wrap ? wrap.querySelector('.info-icon-btn') : null;
+      if(btn) btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+
+const ICON_MOON_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+const ICON_SUN_SVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  if(next === 'dark'){ html.setAttribute('data-theme','dark'); } else { html.removeAttribute('data-theme'); }
+  document.getElementById('themeToggleBtn').setAttribute('aria-pressed', String(next === 'dark'));
+  // Label/icon always describe the state you're switching TO.
+  document.getElementById('themeLabel').textContent = next === 'dark' ? 'light mode' : 'dark mode';
+  document.getElementById('themeIcon').innerHTML = next === 'dark' ? ICON_SUN_SVG : ICON_MOON_SVG;
+}
+document.getElementById('drawerOverlay').addEventListener('click', e => {
+  if(e.target.id === 'drawerOverlay') closeBacklogPanel();
+});
+
+/* ================= BACKLOG DRAG & DROP (drag a card onto the dimmed board area to claim it) ================= */
+function dragBacklogCardStart(e, id){
+  e.dataTransfer.setData('text/plain', String(id));
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function dragBacklogCardEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.getElementById('drawerDropzoneHighlight').classList.remove('active');
+}
+(function(){
+  const overlay = document.getElementById('drawerOverlay');
+  const highlight = document.getElementById('drawerDropzoneHighlight');
+  overlay.addEventListener('dragover', e => {
+    if(e.target.closest('.drawer-panel')){ highlight.classList.remove('active'); return; }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    highlight.classList.add('active');
+  });
+  overlay.addEventListener('dragleave', e => {
+    if(e.target === overlay || e.target === highlight) highlight.classList.remove('active');
+  });
+  overlay.addEventListener('drop', e => {
+    highlight.classList.remove('active');
+    if(e.target.closest('.drawer-panel')) return;
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    if(!id) return;
+    const c = getContact(id);
+    if(!c) return;
+    const n = claimContacts([Number(id)]);
+    if(n > 0){
+      renderBoard(); renderDrawer();
+      showToast(`${c.name} přesunut/a do dnešní fronty k provolání.`);
+    }
+  });
+})();
+
+function populateBacklogFilters(){
+  const pool = contacts.filter(c => c.status === 'backlog' && !c.queued);
+  const typeSel = document.getElementById('backlogTypeFilter');
+  const types = [...new Set(pool.map(c => c.type))].sort();
+  typeSel.innerHTML = '<option value="all">Všechny typy nemovitostí</option>' +
+    types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+
+  const sourceSel = document.getElementById('backlogSourceFilter');
+  const sources = [...new Set(pool.map(c => c.source))].sort();
+  sourceSel.innerHTML = '<option value="all">Všechny zdroje</option>' +
+    sources.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function matchesBacklogFilters(c){
+  const term = document.getElementById('backlogSearchInput').value.trim().toLowerCase();
+  const type = document.getElementById('backlogTypeFilter').value;
+  const source = document.getElementById('backlogSourceFilter').value;
+  if(term){
+    const hay = `${c.name} ${c.locality} ${c.phone} ${c.type} ${c.note} ${c.email}`.toLowerCase();
+    if(!hay.includes(term)) return false;
+  }
+  if(type !== 'all' && c.type !== type) return false;
+  if(source !== 'all' && c.source !== source) return false;
+  return true;
+}
+
+function sortBacklogList(list){
+  const key = document.getElementById('backlogSortSelect').value;
+  const arr = [...list];
+  if(key === 'az'){ arr.sort((a,b)=> a.name.localeCompare(b.name,'cs')); }
+  else if(key === 'priceDesc'){ arr.sort((a,b)=> b.price - a.price); }
+  else if(key === 'priceAsc'){ arr.sort((a,b)=> a.price - b.price); }
+  else if(key === 'lastCall'){ arr.sort((a,b)=> parseCzDate(b.lastCall) - parseCzDate(a.lastCall)); }
+  return arr;
+}
+
+function renderDrawer(){
+  const pool = contacts.filter(c => c.status === 'backlog' && !c.queued);
+  const filtered = sortBacklogList(pool.filter(matchesBacklogFilters));
+  const visible = filtered.slice(0, backlogVisibleCount);
+
+  document.getElementById('drawerMeta').textContent =
+    `Zobrazeno ${visible.length} z ${filtered.length} odpovídajících kontaktů (celkový backlog: ${pool.length} — v produkci desítky tisíc, server-side stránkované).`;
+
+  const grid = document.getElementById('drawerGrid');
+  grid.innerHTML = visible.length
+    ? visible.map(renderBacklogPanelCard).join('')
+    : `<div class="empty-hint">Žádné kontakty neodpovídají filtru.</div>`;
+
+  const loadMoreWrap = document.getElementById('drawerLoadMoreWrap');
+  loadMoreWrap.innerHTML = filtered.length > visible.length
+    ? `<button class="btn" onclick="backlogVisibleCount += ${BACKLOG_PAGE_SIZE}; renderDrawer();">Načíst dalších ${Math.min(BACKLOG_PAGE_SIZE, filtered.length - visible.length)}</button>`
+    : '';
+
+  const bar = document.getElementById('drawerSelectionBar');
+  const n = selectedBacklogIds.size;
+  if(n > 0){
+    bar.innerHTML = `
+      <div class="selection-bar-text">
+        <strong>${n}</strong> ${n === 1 ? 'kontakt vybrán' : (n < 5 ? 'kontakty vybrány' : 'kontaktů vybráno')}
+        <span class="selection-bar-hint">Po přesunu je uvidíte jen vy — ostatním makléřům dočasně zmizí z backlogu, dokud neuplyne časový limit.</span>
+      </div>
+      <div class="selection-bar-actions">
+        <button class="btn small" onclick="clearSelection()">Zrušit výběr</button>
+        <button class="btn primary small" onclick="claimSelected()">➜ Přesunout do fronty (${n})</button>
+      </div>`;
+    bar.classList.add('visible');
+  } else {
+    bar.innerHTML = '';
+    bar.classList.remove('visible');
+  }
+}
+
+/* ================= TOAST ================= */
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ================= INIT ================= */
+document.getElementById('searchInput').addEventListener('input', renderBoard);
+document.getElementById('typeFilter').addEventListener('change', renderBoard);
+
+function resetBacklogPagingAndRender(){ backlogVisibleCount = BACKLOG_PAGE_SIZE; renderDrawer(); }
+document.getElementById('backlogSearchInput').addEventListener('input', resetBacklogPagingAndRender);
+document.getElementById('backlogTypeFilter').addEventListener('change', resetBacklogPagingAndRender);
+document.getElementById('backlogSourceFilter').addEventListener('change', resetBacklogPagingAndRender);
+document.getElementById('backlogSortSelect').addEventListener('change', resetBacklogPagingAndRender);
+
+populateTypeFilter();
+populateBacklogFilters();
+renderBoard();
+</script>
+</body>
+</html>
