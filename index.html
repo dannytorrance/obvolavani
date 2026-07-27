@@ -591,7 +591,6 @@ html[data-theme="dark"] .col-acquired .column-head svg{color:#E6E6E6;}
   color:var(--mm-gray-dark);
   white-space:nowrap;
   flex-shrink:0;
-  padding-top:2px;
 }
 
 .molecule-body{
@@ -665,6 +664,7 @@ html[data-theme="dark"] .col-acquired .column-head svg{color:#E6E6E6;}
   font-size:11.5px;
   color:var(--mm-gray);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  min-width:0;
 }
 
 /* ---------- Modal ---------- */
@@ -961,20 +961,17 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   border-color:var(--mm-green);
 }
 
+.drawer-bottom-bar{flex-shrink:0;}
 .drawer-selection-bar{
   display:none;
   align-items:center;
   justify-content:space-between;
   gap:14px;
-  padding:0 26px;
-  max-height:0;
-  overflow:hidden;
+  padding:12px 26px;
   background:var(--mm-green-lightest);
-  border-bottom:1px solid var(--line);
-  flex-shrink:0;
-  transition:max-height .2s ease, padding .2s ease;
+  border-top:1px solid var(--line);
 }
-.drawer-selection-bar.visible{display:flex; max-height:120px; padding:12px 26px;}
+.drawer-selection-bar.visible{display:flex;}
 .selection-bar-text{font-size:13px; color:var(--ink); display:flex; flex-direction:column; gap:2px;}
 .selection-bar-text strong{color:var(--mm-green-dark); font-size:14px;}
 .selection-bar-hint{font-size:11.5px; color:var(--ink-soft); font-weight:400;}
@@ -1135,10 +1132,12 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
         </select>
       </div>
     </div>
-    <div class="drawer-selection-bar" id="drawerSelectionBar"></div>
     <div class="drawer-meta" id="drawerMeta"></div>
     <div class="drawer-grid" id="drawerGrid"></div>
-    <div class="drawer-loadmore" id="drawerLoadMoreWrap"></div>
+    <div class="drawer-bottom-bar">
+      <div class="drawer-selection-bar" id="drawerSelectionBar"></div>
+      <div class="drawer-loadmore" id="drawerLoadMoreWrap"></div>
+    </div>
   </div>
 </div>
 
@@ -1487,7 +1486,6 @@ function renderBacklogPanelCard(c){
           <div class="molecule-email">${esc(c.email)}</div>
         </div>
       </div>
-      <div class="molecule-time">${c.lastCall ? esc(c.lastCall) : 'Nový kontakt'}</div>
     </div>
     <div class="molecule-body">
       <div class="molecule-row molecule-row-strong">${esc(c.type)} · ${fmtArea(c.area)}</div>
@@ -1498,6 +1496,7 @@ function renderBacklogPanelCard(c){
       </div>
     </div>
     <div class="molecule-footer">
+      <div class="molecule-time">${c.lastCall ? esc(c.lastCall) : 'Nový kontakt'}</div>
       <div class="molecule-footer-right">
         <button class="call-btn" title="Zobrazit detail kontaktu" onclick="event.stopPropagation(); openModal(${c.id});">☎</button>
       </div>
@@ -1537,8 +1536,8 @@ function renderStandardCard(c){
       </div>
     </div>
     <div class="molecule-footer">
+      <span class="kanban-footer-hint">${footerHint(c)}</span>
       <div class="molecule-footer-right">
-        <span class="kanban-footer-hint">${footerHint(c)}</span>
         <button class="call-btn" title="Otevřít kartu kontaktu" onclick="event.stopPropagation(); openModal(${c.id});">☎</button>
       </div>
     </div>
@@ -1926,7 +1925,7 @@ function renderDrawer(){
   document.getElementById('drawerResetFiltersBtn').style.display = hasActiveBacklogFilters() ? 'inline-flex' : 'none';
 
   document.getElementById('drawerMeta').textContent =
-    `Zobrazeno ${visible.length} z ${filtered.length} odpovídajících kontaktů (celkový backlog: ${pool.length} — v produkci desítky tisíc, server-side stránkované).`;
+    `Zobrazeno ${visible.length} z ${filtered.length} odpovídajících kontaktů (kontaktů v backlogu celkem: ${pool.length}).`;
 
   const grid = document.getElementById('drawerGrid');
   grid.classList.toggle('empty', visible.length === 0);
