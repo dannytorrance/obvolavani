@@ -1828,7 +1828,7 @@ function toggleTheme(){
 }
 document.getElementById('drawerOverlay').addEventListener('click', e => {
   if(!e.target.closest('.drawer-panel')) closeBacklogPanel();
-});
+}, true);
 
 /* ================= BACKLOG DRAG & DROP (drag a card onto the dimmed board area to claim it) ================= */
 function dragBacklogCardStart(e, id){
