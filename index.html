@@ -1553,7 +1553,7 @@ function renderBoard(){
     if(status === 'meetings') list.sort((a,b)=> (parseCzDate(a.meetingDate)+parseCzTime(a.meetingTime)) - (parseCzDate(b.meetingDate)+parseCzTime(b.meetingTime)));
     if(status === 'later') list.sort((a,b)=> parseCzDate(a.nextCallDate) - parseCzDate(b.nextCallDate));
     if(status === 'acquired') list.sort((a,b)=> parseCzDate(b.acquiredDate) - parseCzDate(a.acquiredDate));
-    if(status === 'backlog') { const order={hot:0,warm:1,cold:2}; list.sort((a,b)=> (order[a.temp]??3)-(order[b.temp]??3)); }
+    if(status === 'backlog') { list.sort((a,b)=> (b.claimedAt??0)-(a.claimedAt??0)); }
 
     const container = document.getElementById('cards-'+status);
     const queuedTotal = contacts.filter(c => c.status === 'backlog' && c.queued).length;
@@ -1680,7 +1680,7 @@ function renderActionButtons(c){
   if(c.status !== 'meetings') buttons += `<button class="btn" onclick="triggerActionForm('meetings')">📅 Domluvit schůzku</button>`;
   if(c.status !== 'later') buttons += `<button class="btn" onclick="triggerActionForm('later')">🔁 Zavolat později</button>`;
   if(c.status !== 'acquired') buttons += `<button class="btn" onclick="triggerActionForm('acquired')">🏠 Nabral/a nemovitost</button>`;
-  if(c.status === 'backlog' && !c.queued) buttons += `<button class="btn primary" onclick="claimContacts([${c.id}]); renderBoard(); renderDrawer(); renderModal(); showToast('${esc(c.name)} přesunut/a do dnešní fronty k provolání.');">📥 Převzít do fronty</button>`;
+  if(c.status === 'backlog' && !c.queued) buttons += `<button class="btn primary" onclick="claimContacts([${c.id}]); renderBoard(); renderDrawer(); renderModal(); showToast('${esc(c.name)} zařazen/a mezi kontakty.');">📥 Zařadit mezi kontakty</button>`;
   if(c.status !== 'backlog') buttons += `<button class="btn" onclick="moveTo('backlog')">↩ Zpět do zásobníku</button>`;
   if(c.status === 'backlog' && c.queued) buttons += `<button class="btn" onclick="unclaimContact(${c.id}); renderBoard(); renderDrawer(); renderModal(); showToast('${esc(c.name)} odebrán/a z dnešní fronty.');">➖ Odebrat z dnešní fronty</button>`;
   if(c.status !== 'acquired') buttons += `<button class="btn ghost-danger" onclick="archiveContact()">✖ Zpět do backlogu</button>`;
@@ -1948,7 +1948,7 @@ function renderDrawer(){
       </div>
       <div class="selection-bar-actions">
         <button class="btn small" onclick="clearSelection()">Zrušit výběr</button>
-        <button class="btn primary small" onclick="claimSelected()">➜ Přesunout do fronty (${n})</button>
+        <button class="btn primary small" onclick="claimSelected()">➜ Zařadit mezi kontakty (${n})</button>
       </div>`;
     bar.classList.add('visible');
   } else {
