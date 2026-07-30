@@ -1016,6 +1016,9 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   .page-header{padding:14px;}
   .toolbar-row{padding:10px 14px;}
   .board{padding-left:14px; padding-right:14px;}
+  .page-header-left, .page-header-right{width:100%;}
+  .backlog-btn{width:100%; justify-content:center;}
+  .darkmode-btn{flex:1; justify-content:center;}
 }
 </style>
 </head>
@@ -1936,8 +1939,8 @@ function renderDrawer(){
   document.getElementById('drawerTotalCount').textContent = pool.length;
   document.getElementById('drawerResetFiltersBtn').style.display = hasActiveBacklogFilters() ? 'inline-flex' : 'none';
 
-  document.getElementById('drawerMeta').textContent =
-    `Zobrazeno ${visible.length} z ${filtered.length} odpovídajících kontaktů (kontaktů v backlogu celkem: ${pool.length}).`;
+  document.getElementById('drawerMeta').innerHTML =
+    `Zobrazeno <b>${visible.length}</b> z <b>${filtered.length}</b> odpovídajících kontaktů<br>(kontaktů v backlogu celkem: <b>${pool.length}</b>).`;
 
   const grid = document.getElementById('drawerGrid');
   grid.classList.toggle('empty', visible.length === 0);
