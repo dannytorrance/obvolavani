@@ -1860,10 +1860,17 @@ function dragBacklogCardEnd(e){
     if(!id) return;
     const c = getContact(id);
     if(!c) return;
-    const n = claimContacts([Number(id)]);
+    let ids;
+    if(selectedBacklogIds.has(Number(id)) && selectedBacklogIds.size > 1){
+      ids = [...selectedBacklogIds];
+    } else {
+      ids = [Number(id)];
+    }
+    const n = claimContacts(ids);
     if(n > 0){
+      selectedBacklogIds.clear();
       renderBoard(); renderDrawer();
-      showToast(`${c.name} přesunut/a do dnešní fronty k provolání.`);
+      showToast(n === 1 ? `${c.name} zařazen/a mezi kontakty.` : `${n} kontaktů zařazeno mezi kontakty.`);
     }
   });
 })();
