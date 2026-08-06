@@ -359,39 +359,20 @@ select.filter.on-light{
 .col-later::before{background:var(--c-later);}
 .col-acquired::before{background:var(--c-acquired);}
 .column-head{
-  padding:20px 18px 14px;
-  border:none;
-  background:transparent;
+  padding:16px 32px;
+  border-top:1px solid var(--mm-gray-mid);
+  border-bottom:1px solid var(--mm-gray-mid);
+  background:var(--mm-ls-gray);
   display:flex;
   align-items:center;
-  gap:10px;
-}
-.column-head svg{
-  order:1;
-  flex-shrink:0;
-  background:var(--surface-2);
-  border-radius:10px;
-  padding:6px;
-  box-sizing:content-box;
-}
-.column-head h2{
-  order:2;
-  flex:1;
-  font-family:'Inter',sans-serif;
-  font-size:13px;
-  font-weight:600;
-  text-transform:uppercase;
-  letter-spacing:0.04em;
-  margin:0;
-  color:var(--ink-soft);
-  line-height:1.3;
-  text-align:left;
+  justify-content:center;
+  gap:8px;
 }
 .column-count{
-  order:3;
+  order:1;
   font-family:'Inter',sans-serif;
-  font-size:13px;
-  font-weight:600;
+  font-size:14px;
+  font-weight:400;
   color:#fff;
   min-width:22px;
   height:22px;
@@ -400,6 +381,23 @@ select.filter.on-light{
   display:flex;
   align-items:center;
   justify-content:center;
+  flex-shrink:0;
+}
+.column-head h2{
+  order:2;
+  font-family:'Inter',sans-serif;
+  font-size:24px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.01em;
+  margin:0;
+  color:var(--mm-gray-dark);
+  line-height:1.25;
+  text-align:center;
+  white-space:nowrap;
+}
+.column-head svg{
+  order:3;
   flex-shrink:0;
 }
 .col-backlog .column-count,
@@ -1080,7 +1078,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
     <div class="column-head">
       <span class="column-count" id="count-backlog">0</span>
       <h2>Kontakty</h2>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
     </div>
     <div class="cards" id="cards-backlog"></div>
   </div>
@@ -1089,7 +1087,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
     <div class="column-head">
       <span class="column-count" id="count-meetings">0</span>
       <h2>Schůzky</h2>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/><path d="M9 15l2 2 4-4"/></svg>
     </div>
     <div class="cards" id="cards-meetings"></div>
   </div>
@@ -1098,7 +1096,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
     <div class="column-head">
       <span class="column-count" id="count-later">0</span>
       <h2>Zavolat</h2>
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.81.35 1.6.67 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.74-1.24a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.67A2 2 0 0 1 22 16.92z"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.81.35 1.6.67 2.34a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.74-1.24a2 2 0 0 1 2.11-.45c.74.32 1.53.55 2.34.67A2 2 0 0 1 22 16.92z"/></svg>
     </div>
     <div class="cards" id="cards-later"></div>
   </div>
@@ -1107,7 +1105,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
     <div class="column-head">
       <span class="column-count" id="count-acquired">0</span>
       <h2>Získané</h2>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 8.5V21h14V8.5"/><path d="M9 21v-6h6v6"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 8.5V21h14V8.5"/><path d="M9 21v-6h6v6"/></svg>
     </div>
     <div class="cards" id="cards-acquired"></div>
   </div>
@@ -1119,7 +1117,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
 
 <div class="drawer-overlay" id="drawerOverlay">
   <div class="drawer-dropzone-highlight" id="drawerDropzoneHighlight" aria-hidden="true">
-    <span class="drawer-dropzone-label">⬇ Pusťte zde pro přesun do dnešní fronty</span>
+    <span class="drawer-dropzone-label">⬇ Pusťte zde pro přesun mezi kontakty</span>
   </div>
   <div class="drawer-panel" id="drawerPanel" role="dialog" aria-label="Backlog kontaktů">
     <div class="drawer-header">
