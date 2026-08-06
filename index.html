@@ -83,7 +83,7 @@ html[data-theme="dark"]{
 }
 html[data-theme="dark"] .search-wrap.on-light input,
 html[data-theme="dark"] select.filter.on-light{
-  background:var(--surface); color:var(--ink); border:1px solid var(--line);
+  background-color:var(--surface); color:var(--ink); border:1px solid var(--line);
 }
 html[data-theme="dark"] .cards::-webkit-scrollbar-thumb{background:#3A4432;}
 html[data-theme="dark"] .queue-btn:hover{background:var(--mm-green-lightest);}
@@ -295,13 +295,20 @@ html[data-theme="dark"] .darkmode-btn:hover{filter:brightness(0.95);}
 .search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:0.75;}
 
 select.filter{
-  background:var(--surface);
+  background-color:var(--surface);
   border:1px solid var(--line);
   color:var(--ink);
   border-radius:8px;
-  padding:9px 10px;
+  padding:9px 34px 9px 10px;
   font-size:13.5px;
   font-family:'Inter',sans-serif;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235A6459' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  background-size:14px;
 }
 
 .search-wrap.on-light input{
@@ -311,7 +318,7 @@ select.filter{
 .search-wrap.on-light input::placeholder{color:var(--ink-faint);}
 .search-wrap.on-light svg{opacity:0.6;}
 select.filter.on-light{
-  background:var(--surface); color:var(--ink);
+  background-color:var(--surface); color:var(--ink);
   border:1px solid var(--line);
 }
 
@@ -894,7 +901,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   border:none;
   border-radius:0;
   border-right:1px solid var(--line);
-  background:var(--surface);
+  background-color:var(--surface);
 }
 .filter-group select.filter:last-child{border-right:none;}
 .filter-group select.filter:focus-visible{outline:2px solid var(--mm-green); outline-offset:-2px; position:relative; z-index:1;}
