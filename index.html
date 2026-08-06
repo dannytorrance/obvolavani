@@ -713,9 +713,10 @@ html[data-theme="dark"] .col-acquired .column-head svg{color:#E6E6E6;}
 }
 .modal-close{
   border:none;background:var(--surface-2);
-  width:30px;height:30px;border-radius:50%;
-  cursor:pointer; font-size:16px; color:var(--ink-soft);
+  width:36px;height:36px;border-radius:50%;
+  cursor:pointer; font-size:18px; color:var(--ink-soft);
   flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
 }
 .modal-close:hover{background:var(--line);}
 .modal-body{padding:18px 22px 22px;}
@@ -907,6 +908,10 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   color:var(--ink-soft);
   border-bottom:1px solid var(--line);
   flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
 }
 .drawer-grid{
   flex:1;
@@ -1020,6 +1025,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   .backlog-btn{width:100%; justify-content:center;}
   .darkmode-btn{flex:1; justify-content:center;}
   #typeFilter{width:100%;}
+  .modal-close{width:44px; height:44px; font-size:20px;}
 }
 </style>
 </head>
@@ -1121,7 +1127,6 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
         </div>
       </div>
       <div class="drawer-header-actions">
-        <button class="btn small" id="drawerResetFiltersBtn" onclick="resetBacklogFilters()" style="display:none;">✕ Zrušit filtry</button>
         <button class="modal-close" onclick="closeBacklogPanel()" aria-label="Zavřít backlog">✕</button>
       </div>
     </div>
@@ -1141,7 +1146,10 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
         </select>
       </div>
     </div>
-    <div class="drawer-meta" id="drawerMeta"></div>
+    <div class="drawer-meta" id="drawerMeta">
+      <span id="drawerMetaText"></span>
+      <button class="btn small" id="drawerResetFiltersBtn" onclick="resetBacklogFilters()" style="display:none;">✕ Zrušit filtry</button>
+    </div>
     <div class="drawer-grid" id="drawerGrid"></div>
     <div class="drawer-bottom-bar">
       <div class="drawer-selection-bar" id="drawerSelectionBar"></div>
@@ -1940,7 +1948,7 @@ function renderDrawer(){
   document.getElementById('drawerTotalCount').textContent = pool.length;
   document.getElementById('drawerResetFiltersBtn').style.display = hasActiveBacklogFilters() ? 'inline-flex' : 'none';
 
-  document.getElementById('drawerMeta').innerHTML =
+  document.getElementById('drawerMetaText').innerHTML =
     `Zobrazeno <b>${visible.length}</b> z <b>${filtered.length}</b> odpovídajících kontaktů<br>(kontaktů v backlogu celkem: <b>${pool.length}</b>).`;
 
   const grid = document.getElementById('drawerGrid');
