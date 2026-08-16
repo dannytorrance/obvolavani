@@ -1688,6 +1688,7 @@ function clearSearchInput(){
 }
 function toggleTypeDropdown(e){
   e.stopPropagation();
+  const panel = document.getElementById('typeDropdownPanel');
   const btn = document.getElementById('typeDropdownBtn');
   const open = panel.classList.toggle('open');
   btn.setAttribute('aria-expanded', String(open));
