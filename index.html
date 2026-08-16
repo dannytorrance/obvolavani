@@ -298,7 +298,7 @@ html[data-theme="dark"] .darkmode-btn:hover{filter:brightness(0.95);}
 }
 .search-wrap input::placeholder{color:var(--ink-faint);}
 .search-wrap input:focus{outline:none;}
-.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%); color:var(--ink-faint);}
+.search-wrap > svg{position:absolute;left:14px;top:50%;transform:translateY(-50%); color:var(--ink-faint);}
 .search-wrap input{padding-right:34px;}
 .search-clear-btn{
   position:absolute;
@@ -438,14 +438,14 @@ select.filter{
 }
 
 .search-wrap.on-light input{
-  background:var(--surface); color:var(--ink);
-  border:1px solid var(--line);
+  background:transparent; color:var(--ink);
+  border:none;
 }
 .search-wrap.on-light input::placeholder{color:var(--ink-faint);}
-.search-wrap.on-light svg{opacity:0.6;}
+.search-wrap.on-light > svg{opacity:0.6;}
 select.filter.on-light{
-  background-color:var(--surface); color:var(--ink);
-  border:1px solid var(--line);
+  background-color:var(--surface-2); color:var(--ink);
+  border:none;
 }
 
 
@@ -1034,33 +1034,34 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   padding:14px 26px;
   display:flex; flex-direction:column; gap:10px;
   border-bottom:1px solid var(--line);
-  background:var(--surface-2);
+  background:var(--bg);
   flex-shrink:0;
 }
-.search-wrap-full{width:100%;}
+.drawer-toolbar .search-pill{
+  flex-wrap:wrap;
+}
+.search-wrap-full{flex:1 1 220px; min-width:160px;}
 .search-wrap-full input{width:100%;}
 
 .filter-group{
   display:flex;
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:8px;
-  overflow:hidden;
-  background:var(--surface);
+  flex:1 1 480px;
+  min-width:0;
 }
 .filter-group select.filter{
   flex:1;
   min-width:0;
   border:none;
-  border-radius:0;
-  border-right:1px solid var(--line);
-  background-color:var(--surface);
+  border-radius:10px;
+  background-color:var(--surface-2);
+  margin-left:6px;
 }
-.filter-group select.filter:last-child{border-right:none;}
+.filter-group select.filter:first-child{margin-left:0;}
 .filter-group select.filter:focus-visible{outline:2px solid var(--mm-green); outline-offset:-2px; position:relative; z-index:1;}
 @media (max-width:760px){
   .filter-group{flex-wrap:wrap;}
-  .filter-group select.filter{flex:1 1 50%; border-bottom:1px solid var(--line);}
+  .filter-group select.filter{flex:1 1 100%; margin-left:0; margin-top:6px;}
+  .filter-group select.filter:first-child{margin-top:0;}
 }
 .drawer-meta{
   padding:14px 26px;
@@ -1088,7 +1089,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   justify-content:center;
 }
 .drawer-grid.empty .empty-hint{width:100%; max-width:360px;}
-.drawer-loadmore{padding:6px 26px 22px; text-align:center; flex-shrink:0;}
+.drawer-loadmore{padding:16px 26px; text-align:center; flex-shrink:0; border-top:1px solid var(--line);}
 
 .queue-btn{
   border:1px solid var(--mm-green);
@@ -1225,7 +1226,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
     <div class="search-wrap">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input id="searchInput" type="text" placeholder="Hledat jméno, lokalitu, telefon…" oninput="toggleSearchClear()">
-      <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()" aria-label="Vymazat hledání" style="display:none;">
+      <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()" aria-label="Vymazat hledání" title="vymazat obsah filtru" style="display:none;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -1353,19 +1354,25 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
       </div>
     </div>
     <div class="drawer-toolbar">
-      <div class="search-wrap on-light search-wrap-full">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6459" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="backlogSearchInput" type="text" placeholder="Hledat jméno, lokalitu, telefon…">
-      </div>
-      <div class="filter-group">
-        <select id="backlogTypeFilter" class="filter on-light"></select>
-        <select id="backlogSourceFilter" class="filter on-light"></select>
-        <select id="backlogSortSelect" class="filter on-light">
-          <option value="az">Řadit: abecedně A–Z</option>
-          <option value="priceDesc">Řadit: cena – nejvyšší</option>
-          <option value="priceAsc">Řadit: cena – nejnižší</option>
-          <option value="lastCall">Řadit: naposledy kontaktováno</option>
-        </select>
+      <div class="search-pill">
+        <div class="search-wrap on-light search-wrap-full">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="backlogSearchInput" type="text" placeholder="Hledat jméno, lokalitu, telefon…" oninput="toggleBacklogSearchClear()">
+          <button class="search-clear-btn" id="backlogSearchClearBtn" onclick="clearBacklogSearchInput()" aria-label="Vymazat hledání" title="vymazat obsah filtru" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="search-pill-divider"></div>
+        <div class="filter-group">
+          <select id="backlogTypeFilter" class="filter on-light"></select>
+          <select id="backlogSourceFilter" class="filter on-light"></select>
+          <select id="backlogSortSelect" class="filter on-light">
+            <option value="az">Řadit: abecedně A–Z</option>
+            <option value="priceDesc">Řadit: cena – nejvyšší</option>
+            <option value="priceAsc">Řadit: cena – nejnižší</option>
+            <option value="lastCall">Řadit: naposledy kontaktováno</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="drawer-meta" id="drawerMeta">
@@ -1685,6 +1692,17 @@ function clearSearchInput(){
   toggleSearchClear();
   input.focus();
   renderBoard();
+}
+function toggleBacklogSearchClear(){
+  const input = document.getElementById('backlogSearchInput');
+  document.getElementById('backlogSearchClearBtn').style.display = input.value.length > 0 ? 'flex' : 'none';
+}
+function clearBacklogSearchInput(){
+  const input = document.getElementById('backlogSearchInput');
+  input.value = '';
+  toggleBacklogSearchClear();
+  input.focus();
+  resetBacklogPagingAndRender();
 }
 function toggleTypeDropdown(e){
   e.stopPropagation();
