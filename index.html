@@ -98,19 +98,26 @@ body{
   background:var(--bg);
   color:var(--ink);
   font-family:'Inter',system-ui,sans-serif;
-  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
   -webkit-font-smoothing:antialiased;
 }
 
 /* ---------- Page Header (Figma "Page Header - Panel", node 251:6450) ---------- */
 .page-header{
+  flex-shrink:0;
   background:var(--surface);
   padding:16px;
+  border-bottom:1px solid var(--line);
+  width:100%;
+}
+.page-header-inner{
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   gap:16px;
-  border-bottom:1px solid var(--line);
   max-width:1420px;
   margin:0 auto;
 }
@@ -268,6 +275,7 @@ html[data-theme="dark"] .darkmode-btn:hover{filter:brightness(0.95);}
 /* ---------- Toolbar row (search + filters) ---------- */
 .toolbar-row{
   display:flex;
+  flex-shrink:0;
   padding:16px;
   background:var(--bg);
 }
@@ -463,7 +471,11 @@ select.filter.on-light{
   margin:0 auto;
   padding:24px 24px 40px;
   overflow-x:auto;
+  overflow-y:hidden;
   align-items:flex-start;
+  flex:1;
+  min-height:0;
+  width:100%;
 }
 .column{
   background:var(--surface-2);
@@ -473,7 +485,7 @@ select.filter.on-light{
   flex:1 0 310px;
   display:flex;
   flex-direction:column;
-  max-height:calc(100vh - 100px);
+  height:100%;
   border:1px solid var(--line);
   box-shadow:none;
   overflow:hidden;
@@ -560,6 +572,7 @@ select.filter.on-light{
   gap:10px;
   overflow-y:auto;
   flex:1;
+  min-height:0;
 }
 .cards.drag-over{background:rgba(83,189,4,0.07); outline:2px dashed var(--mm-green); outline-offset:-6px; border-radius:8px;}
 .column.column-drag-over{
@@ -946,6 +959,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
 .btn.ghost-danger{color:var(--hot); border-color:var(--hot-lightest);}
 .btn.ghost-danger:hover{background:var(--hot-lightest);}
 .btn.small{padding:6px 10px; font-size:12px;}
+.btn.btn-claim-selected{padding:12px 22px; background:var(--mm-green-dark, #387B22); border-color:var(--mm-green-dark, #387B22);}
 
 .action-form{
   margin-top:12px;
@@ -1197,6 +1211,7 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
   .search-pill{flex-wrap:wrap;}
   .type-dropdown-wrap{flex:1 1 100%;}
   .type-dropdown-btn{width:100%;}
+  .search-cta-btn{width:100%; justify-content:center;}
   .modal-close{width:44px; height:44px; font-size:20px;}
 }
 </style>
@@ -1204,28 +1219,30 @@ textarea.note-field:focus{outline:2px solid var(--mm-green); outline-offset:1px;
 <body>
 
 <div class="page-header">
-  <div class="page-header-left">
-    <div class="h1-wrap">
-      <h1>M&amp;M Kanban Tabule</h1>
-      <button class="info-icon-btn" id="helpIconBtn" onclick="toggleTooltip(event, 'helpTooltip')" aria-label="Nápověda" aria-expanded="false">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <div class="page-header-inner">
+    <div class="page-header-left">
+      <div class="h1-wrap">
+        <h1>M&amp;M Kanban Tabule</h1>
+        <button class="info-icon-btn" id="helpIconBtn" onclick="toggleTooltip(event, 'helpTooltip')" aria-label="Nápověda" aria-expanded="false">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        </button>
+        <div class="help-tooltip" id="helpTooltip">Přetáhněte položky mezi sloupci <br>pro správu pracovního postupu.</div>
+      </div>
+      <button class="backlog-btn" id="backlogToggleBtn" onclick="toggleBacklogPanel()" aria-pressed="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+        <span>Zobrazit Backlog</span>
       </button>
-      <div class="help-tooltip" id="helpTooltip">Přetáhněte položky mezi sloupci <br>pro správu pracovního postupu.</div>
     </div>
-    <button class="backlog-btn" id="backlogToggleBtn" onclick="toggleBacklogPanel()" aria-pressed="false">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
-      <span>Zobrazit Backlog</span>
-    </button>
-  </div>
-  <div class="page-header-right">
-    <button class="darkmode-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-pressed="false" title="Přepnout světlý/tmavý režim">
-      <span id="themeLabel">dark mode</span>
-      <span id="themeIcon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-      </span>
-    </button>
-    <div class="header-avatar" title="Radek Jánský">
-      <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Radek Jánský">
+    <div class="page-header-right">
+      <button class="darkmode-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-pressed="false" title="Přepnout světlý/tmavý režim">
+        <span id="themeLabel">dark mode</span>
+        <span id="themeIcon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </span>
+      </button>
+      <div class="header-avatar" title="Radek Jánský">
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Radek Jánský">
+      </div>
     </div>
   </div>
 </div>
@@ -2269,7 +2286,7 @@ function renderDrawer(){
       </div>
       <div class="selection-bar-actions">
         <button class="btn small" onclick="clearSelection()">Zrušit výběr</button>
-        <button class="btn primary small" onclick="claimSelected()">➜ Zařadit mezi kontakty (${n})</button>
+        <button class="btn primary small btn-claim-selected" onclick="claimSelected()">➜ Zařadit mezi kontakty (${n})</button>
       </div>`;
     bar.classList.add('visible');
   } else {
